@@ -1,0 +1,330 @@
+/* Global App Layout */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+}
+
+/* Responsive Container */
+.page-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .page-container {
+    padding: 24px;
+  }
+}
+
+/* Header Responsiveness */
+.app-header {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 3px solid #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .app-header {
+    padding: 14px 24px;
+  }
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-nav {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .header-nav {
+    width: auto;
+    gap: 8px;
+  }
+}
+
+.header-nav-btn {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+  min-height: 40px;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .header-nav-btn {
+    flex: initial;
+    padding: 8px 16px;
+  }
+}
+
+.ws-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #0f172a;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid #334155;
+  white-space: nowrap;
+}
+
+/* Cashier Responsive Layout */
+.cashier-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .cashier-grid {
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .cashier-grid {
+    grid-template-columns: 420px 1fr;
+  }
+}
+
+/* Quick Add Items Buttons */
+.quick-items-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-item-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: #1e293b;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+}
+
+@media (hover: hover) {
+  .quick-item-btn:hover {
+    background: #e2e8f0;
+    border-color: #94a3b8;
+  }
+}
+
+/* Kitchen Responsive Layout */
+.kitchen-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 640px) {
+  .kitchen-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.kitchen-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .kitchen-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kitchen-grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  }
+}
+
+/* Kitchen Ticket Action Button */
+.kitchen-action-btn {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  touch-action: manipulation;
+}
+
+/* Customer View Responsive */
+.customer-container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .customer-container {
+    padding: 24px 16px;
+  }
+}
+
+.customer-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+@media (min-width: 480px) {
+  .customer-search-form {
+    flex-direction: row;
+  }
+}
+
+.customer-search-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  outline: none;
+}
+
+@media (min-width: 480px) {
+  .customer-search-input {
+    border: none;
+  }
+}
+
+.customer-search-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+/* Stepper Mobile Adaptability */
+.stepper-wrap {
+  margin: 14px 0;
+  padding: 14px 8px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.stepper-label {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  .stepper-label {
+    font-size: 0.78rem;
+  }
+}
+
+/* Tracking Link Bar in Cashier & Kitchen */
+.tracking-bar {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (min-width: 500px) {
+  .tracking-bar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.tracking-bar-actions {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+@media (min-width: 500px) {
+  .tracking-bar-actions {
+    width: auto;
+  }
+}
+
+.tracking-bar-actions button,
+.tracking-bar-actions a {
+  flex: 1;
+  text-align: center;
+  justify-content: center;
+  min-height: 36px;
+}
+
+@media (min-width: 500px) {
+  .tracking-bar-actions button,
+  .tracking-bar-actions a {
+    flex: initial;
+  }
+}
