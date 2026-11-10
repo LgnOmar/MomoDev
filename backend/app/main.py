@@ -5,6 +5,7 @@ import logging
 
 from app.database import init_db
 from app.routes.orders import router as orders_router
+from app.routes.menu import router as menu_router
 from app.services.websocket_manager import ws_manager
 
 logging.basicConfig(level=logging.INFO)
@@ -37,6 +38,7 @@ app.add_middleware(
 
 # Include REST routes
 app.include_router(orders_router)
+app.include_router(menu_router)
 
 @app.get("/api/health")
 def health_check():

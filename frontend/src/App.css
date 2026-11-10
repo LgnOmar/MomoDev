@@ -328,3 +328,66 @@
     flex: initial;
   }
 }
+
+/* Customer Menu & Cart Responsive Layout */
+.customer-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .customer-layout-grid {
+    grid-template-columns: 1fr 350px;
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .customer-layout-grid {
+    grid-template-columns: 1fr 380px;
+    gap: 28px;
+  }
+}
+
+.cart-panel-sticky {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 2px solid #3b82f6;
+  padding: 18px;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
+}
+
+@media (min-width: 960px) {
+  .cart-panel-sticky {
+    position: sticky;
+    top: 20px;
+  }
+}
+
+/* Category Dishes Grid */
+.dishes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 600px) {
+  .dishes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  }
+}
+
+/* Cashier Menu Availability Grid */
+.availability-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .availability-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}

@@ -3,7 +3,7 @@ import Header from './components/Header';
 import CashierView from './pages/CashierView';
 import KitchenView from './pages/KitchenView';
 import CustomerView from './pages/CustomerView';
-import { fetchOrders } from './services/api';
+import { fetchOrders, fetchMenu } from './services/api';
 import { wsService } from './services/websocket';
 import './App.css';
 
@@ -12,7 +12,7 @@ export default function App() {
   const getUrlParams = () => {
     const params = new URLSearchParams(window.location.search);
     return {
-      role: params.get('role') || 'cashier',
+      role: params.get('role') || 'customer', // Customer self-service is now primary
       orderId: params.get('orderId') || '',
     };
   };
@@ -22,8 +22,10 @@ export default function App() {
   const [customerOrderId, setCustomerOrderId] = useState(initialParams.orderId);
 
   const [orders, setOrders] = useState([]);
+  const [menu, setMenu] = useState([]);
   const [wsStatus, setWsStatus] = useState('disconnected');
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [loadingMenu, setLoadingMenu] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
   // Sync state when browser navigation occurs (Back/Forward)
@@ -51,15 +53,14 @@ export default function App() {
     updateUrl(newRole, newRole === 'customer' ? customerOrderId : '');
   };
 
-  const handleCustomerSearch = (searchedOrderId) => {
-    setCustomerOrderId(searchedOrderId);
-    updateUrl('customer', searchedOrderId);
+  const handleCustomerTrackOrder = (orderIdToTrack) => {
+    setCustomerOrderId(orderIdToTrack);
+    updateUrl('customer', orderIdToTrack);
   };
 
   // REST API fetch for authoritative order list
   const loadInitialOrders = useCallback(async () => {
     setLoadingOrders(true);
-    setFetchError(null);
     try {
       const data = await fetchOrders();
       setOrders(data);
@@ -71,9 +72,23 @@ export default function App() {
     }
   }, []);
 
-  // Set up REST polling fallback & WebSocket connection on mount
+  // REST API fetch for structured menu
+  const loadInitialMenu = useCallback(async () => {
+    setLoadingMenu(true);
+    try {
+      const data = await fetchMenu();
+      setMenu(data);
+    } catch (err) {
+      console.error('Failed to load menu via REST API:', err);
+    } finally {
+      setLoadingMenu(false);
+    }
+  }, []);
+
+  // Initial mount: load data & establish WebSocket connection
   useEffect(() => {
     loadInitialOrders();
+    loadInitialMenu();
 
     // Start WebSocket
     wsService.connect();
@@ -94,13 +109,24 @@ export default function App() {
         setOrders((prev) =>
           prev.map((o) => (o.id === msg.data.id ? msg.data : o))
         );
+      } else if (msg.event === 'menu_item_updated') {
+        const updatedItem = msg.data;
+        setMenu((prevMenu) =>
+          prevMenu.map((cat) => ({
+            ...cat,
+            items: cat.items.map((item) =>
+              item.id === updatedItem.id ? updatedItem : item
+            ),
+          }))
+        );
       }
     });
 
     // When WebSocket reconnects, refresh data from REST API to recover any missed events
     const unsubReconnect = wsService.onReconnect(() => {
-      console.log('WebSocket reconnected! Refreshing orders from REST API...');
+      console.log('WebSocket reconnected! Refreshing data from REST API...');
       loadInitialOrders();
+      loadInitialMenu();
     });
 
     return () => {
@@ -109,7 +135,7 @@ export default function App() {
       unsubReconnect();
       wsService.disconnect();
     };
-  }, [loadInitialOrders]);
+  }, [loadInitialOrders, loadInitialMenu]);
 
   const handleOrderCreated = (newOrder) => {
     setOrders((prev) => {
@@ -121,6 +147,17 @@ export default function App() {
   const handleOrderUpdated = (updatedOrder) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === updatedOrder.id ? updatedOrder : o))
+    );
+  };
+
+  const handleMenuItemUpdated = (updatedItem) => {
+    setMenu((prevMenu) =>
+      prevMenu.map((cat) => ({
+        ...cat,
+        items: cat.items.map((item) =>
+          item.id === updatedItem.id ? updatedItem : item
+        ),
+      }))
     );
   };
 
@@ -149,7 +186,11 @@ export default function App() {
             ⚠️ <strong>Backend Connection Error:</strong> {fetchError}. Please verify that the FastAPI backend is running at <code>http://127.0.0.1:8000</code>.
           </span>
           <button
-            onClick={loadInitialOrders}
+            onClick={() => {
+              setFetchError(null);
+              loadInitialOrders();
+              loadInitialMenu();
+            }}
             style={{
               backgroundColor: '#dc2626',
               color: '#ffffff',
@@ -170,7 +211,9 @@ export default function App() {
         {currentRole === 'cashier' && (
           <CashierView
             orders={orders}
+            menu={menu}
             onOrderCreated={handleOrderCreated}
+            onMenuItemUpdated={handleMenuItemUpdated}
           />
         )}
 
@@ -185,7 +228,13 @@ export default function App() {
           <CustomerView
             initialOrderId={customerOrderId}
             allOrders={orders}
-            onSearchOrder={handleCustomerSearch}
+            menu={menu}
+            loadingMenu={loadingMenu}
+            onOrderPlaced={(createdOrder) => {
+              handleOrderCreated(createdOrder);
+              handleCustomerTrackOrder(createdOrder.id);
+            }}
+            onTrackOrder={handleCustomerTrackOrder}
           />
         )}
       </main>

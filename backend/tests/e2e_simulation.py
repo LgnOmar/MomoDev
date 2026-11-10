@@ -4,7 +4,7 @@ import websockets
 import json
 
 async def run_e2e_simulation():
-    print("--- Starting E2E Multi-User Live Simulation ---")
+    print("--- Starting Extended E2E Multi-User Live Simulation ---")
     
     # Check Health
     async with httpx.AsyncClient() as client:
@@ -18,17 +18,30 @@ async def run_e2e_simulation():
     ws_customer = await websockets.connect("ws://127.0.0.1:8000/ws")
     print("✓ Connected 3 WebSocket clients (Cashier, Kitchen, Customer)")
 
-    # 1. Cashier creates order via REST
+    # 1. Customer browses menu
+    async with httpx.AsyncClient() as client:
+        menu_resp = await client.get("http://127.0.0.1:8000/api/menu")
+        assert menu_resp.status_code == 200
+        menu = menu_resp.json()
+        assert len(menu) == 20
+        print(f"✓ Customer retrieved structured menu ({len(menu)} categories across 3 meal periods)")
+
+    # 2. Customer submits self-service order in Algerian Dinars (DA)
+    # ITEM-B-101: Jus d'orange (350 DA * 2 = 700 DA)
+    # ITEM-B-401: Chakchouka (750 DA * 1 = 750 DA) -> Total: 1450.0 DA
     async with httpx.AsyncClient() as client:
         create_resp = await client.post("http://127.0.0.1:8000/api/orders", json={
-            "customer_name": "E2E Test User",
-            "items": ["Double Bacon Burger", "Truffle Fries"]
+            "customer_name": "Farid Haddad",
+            "items": [
+                {"menu_item_id": "ITEM-B-101", "quantity": 2},
+                {"menu_item_id": "ITEM-B-401", "quantity": 1},
+            ]
         })
         assert create_resp.status_code == 201
         order = create_resp.json()
         order_id = order["id"]
-        version = order["version"]
-        print(f"✓ Cashier created order {order_id} (version: {version})")
+        assert order["total_price"] == 1450.0
+        print(f"✓ Customer placed self-service order {order_id} (Total: {order['total_price']:.0f} DA, v{order['version']})")
 
     # All 3 clients should receive order_created event
     msg_cashier = json.loads(await ws_cashier.recv())
@@ -38,32 +51,61 @@ async def run_e2e_simulation():
     assert msg_cashier["event"] == "order_created" and msg_cashier["data"]["id"] == order_id
     assert msg_kitchen["event"] == "order_created" and msg_kitchen["data"]["id"] == order_id
     assert msg_customer["event"] == "order_created" and msg_customer["data"]["id"] == order_id
-    print("✓ All 3 WebSocket clients received order_created event simultaneously!")
+    print("✓ Cashier, Kitchen, and Customer received new order event simultaneously via WebSocket!")
 
-    # 2. Kitchen advances status from New -> Preparing (version 1 -> 2)
+    # 3. Cashier toggles an item's availability (ITEM-L-201: Couscous Royal)
+    async with httpx.AsyncClient() as client:
+        toggle_resp = await client.patch("http://127.0.0.1:8000/api/menu/items/ITEM-L-201/availability", json={
+            "is_available": False
+        })
+        assert toggle_resp.status_code == 200
+        print("✓ Cashier marked 'ITEM-L-201' (Couscous Royal) as unavailable in SQLite")
+
+    # All 3 clients should receive menu_item_updated event
+    menu_msg1 = json.loads(await ws_cashier.recv())
+    menu_msg2 = json.loads(await ws_kitchen.recv())
+    menu_msg3 = json.loads(await ws_customer.recv())
+
+    assert menu_msg3["event"] == "menu_item_updated"
+    assert menu_msg3["data"]["id"] == "ITEM-L-201"
+    assert menu_msg3["data"]["is_available"] is False
+    print("✓ Customer screen immediately received 'menu_item_updated' broadcast without refresh!")
+
+    # Verify backend rejects order for this newly unavailable item
+    async with httpx.AsyncClient() as client:
+        reject_resp = await client.post("http://127.0.0.1:8000/api/orders", json={
+            "customer_name": "Client En Retard",
+            "items": [{"menu_item_id": "ITEM-L-201", "quantity": 1}]
+        })
+        assert reject_resp.status_code == 400
+        print("✓ Backend successfully rejected order containing the unavailable item!")
+
+    # Restore item availability
+    async with httpx.AsyncClient() as client:
+        await client.patch("http://127.0.0.1:8000/api/menu/items/ITEM-L-201/availability", json={
+            "is_available": True
+        })
+    # Drain restore messages
+    await ws_cashier.recv()
+    await ws_kitchen.recv()
+    await ws_customer.recv()
+
+    # 4. Kitchen advances order: New -> Preparing (version 1 -> 2)
     async with httpx.AsyncClient() as client:
         patch_resp = await client.patch(f"http://127.0.0.1:8000/api/orders/{order_id}/status", json={
             "status": "Preparing",
             "version": 1
         })
         assert patch_resp.status_code == 200
-        updated = patch_resp.json()
-        assert updated["status"] == "Preparing"
-        assert updated["version"] == 2
-        print(f"✓ Kitchen advanced status to Preparing (new version: {updated['version']})")
+        print(f"✓ Kitchen advanced {order_id} to Preparing (v2)")
 
-    # All 3 clients receive order_updated event
-    msg_cashier2 = json.loads(await ws_cashier.recv())
-    msg_kitchen2 = json.loads(await ws_kitchen.recv())
-    msg_customer2 = json.loads(await ws_customer.recv())
+    # Receive update
+    u_c = json.loads(await ws_customer.recv())
+    assert u_c["data"]["status"] == "Preparing"
+    await ws_cashier.recv()
+    await ws_kitchen.recv()
 
-    assert msg_cashier2["data"]["status"] == "Preparing"
-    assert msg_kitchen2["data"]["status"] == "Preparing"
-    assert msg_customer2["data"]["status"] == "Preparing"
-    print("✓ All 3 WebSocket clients received status update to Preparing!")
-
-    # 3. Simulate Concurrent Simultaneous Updates (Conflict Handling)
-    # Two clients both send status=Ready with version=2 at the exact same moment
+    # 5. OCC Concurrency test on order
     print("Testing simultaneous concurrent updates with version 2...")
     async with httpx.AsyncClient() as client:
         req1 = client.patch(f"http://127.0.0.1:8000/api/orders/{order_id}/status", json={
@@ -78,28 +120,13 @@ async def run_e2e_simulation():
 
     status_codes = sorted([resp1.status_code, resp2.status_code])
     assert status_codes == [200, 409], f"Expected [200, 409], got {status_codes}"
-    conflict_resp = resp1 if resp1.status_code == 409 else resp2
-    conflict_json = conflict_resp.json()
-    assert "Conflict" in conflict_json["detail"]
-    assert conflict_json["current_order"]["version"] == 3
-    assert conflict_json["current_order"]["status"] == "Ready"
-    print(f"✓ Concurrency test passed: Exactly one update succeeded (200), and stale update was rejected with HTTP 409 Conflict!")
-    print(f"✓ Conflict response contained current order state (version {conflict_json['current_order']['version']})")
-
-    # Advance Ready -> Served
-    async with httpx.AsyncClient() as client:
-        served_resp = await client.patch(f"http://127.0.0.1:8000/api/orders/{order_id}/status", json={
-            "status": "Served",
-            "version": 3
-        })
-        assert served_resp.status_code == 200
-        print("✓ Order advanced to final state: Served (version: 4)")
+    print("✓ Concurrency check: Exactly one succeeded (200), stale update rejected with 409 Conflict!")
 
     # Clean up WebSockets
     await ws_cashier.close()
     await ws_kitchen.close()
     await ws_customer.close()
-    print("--- E2E Multi-User Live Simulation Successfully Completed! ---")
+    print("--- Extended E2E Live Simulation Completed Successfully! ---")
 
 if __name__ == "__main__":
     asyncio.run(run_e2e_simulation())

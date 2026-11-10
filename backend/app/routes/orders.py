@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.database import get_db, row_to_dict
 from app.models import (
+    CustomerOrderItemInput,
     OrderCreate,
     OrderResponse,
     OrderStatus,
@@ -40,7 +41,6 @@ def get_order(order_id: str):
     """Retrieve a single order by ID."""
     clean_id = order_id.strip()
     with get_db() as conn:
-        # Match exact ID or support numeric input e.g. '1001' -> 'ORD-1001'
         cursor = conn.execute(
             "SELECT * FROM orders WHERE id = ? OR id = ?",
             (clean_id, f"ORD-{clean_id}")
@@ -57,22 +57,95 @@ def get_order(order_id: str):
 async def create_order(payload: OrderCreate):
     """
     Create a new order starting at status 'New' and version 1.
+    Supports both:
+    1. Customer self-service ordering with menu item IDs & server-calculated prices.
+    2. Cashier walk-in ordering with custom item strings.
+    Validates item existence, positive quantities, and availability server-side.
     Broadcasts 'order_created' after successful database commit.
     """
     created_at = datetime.now(timezone.utc).isoformat()
-    items_json = json.dumps(payload.items)
     initial_status = OrderStatus.NEW.value
     initial_version = 1
 
+    snapshots = []
+    total_price = 0.0
+
     with get_db() as conn:
+        # Check if items are structured menu item inputs or plain strings
+        first_item = payload.items[0] if payload.items else None
+
+        if isinstance(first_item, str):
+            # Legacy or quick walk-in custom item entries from cashier
+            for raw_item in payload.items:
+                trimmed = str(raw_item).strip()
+                if not trimmed:
+                    continue
+                snapshots.append({
+                    "menu_item_id": None,
+                    "name": trimmed,
+                    "unit_price": 0.0,
+                    "quantity": 1,
+                    "line_total": 0.0,
+                })
+            total_price = 0.0
+        else:
+            # Customer self-service ordering: validate every item against DB
+            for item_input in payload.items:
+                # item_input is CustomerOrderItemInput
+                item_id = item_input.menu_item_id.strip()
+                qty = item_input.quantity
+
+                if qty <= 0:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Item quantity must be a positive integer, got {qty}."
+                    )
+
+                menu_row = conn.execute(
+                    "SELECT id, name, price, is_available FROM menu_items WHERE id = ?;",
+                    (item_id,)
+                ).fetchone()
+
+                if not menu_row:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Menu item '{item_id}' does not exist."
+                    )
+
+                if not bool(menu_row["is_available"]):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Item '{menu_row['name']}' is currently unavailable. Please remove it from your cart."
+                    )
+
+                unit_price = float(menu_row["price"])
+                line_total = round(unit_price * qty, 2)
+                snapshots.append({
+                    "menu_item_id": menu_row["id"],
+                    "name": menu_row["name"],
+                    "unit_price": unit_price,
+                    "quantity": qty,
+                    "line_total": line_total,
+                })
+
+            total_price = round(sum(s["line_total"] for s in snapshots), 2)
+
+        if not snapshots:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Order must contain at least one valid item."
+            )
+
+        items_json = json.dumps(snapshots)
+
         with conn:
             order_id = _generate_next_order_id(conn)
             conn.execute(
                 """
-                INSERT INTO orders (id, customer_name, items, status, created_at, version)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO orders (id, customer_name, items, status, created_at, version, total_price)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
-                (order_id, payload.customer_name, items_json, initial_status, created_at, initial_version)
+                (order_id, payload.customer_name, items_json, initial_status, created_at, initial_version, total_price)
             )
             cursor = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
             created_order = row_to_dict(cursor.fetchone())

@@ -73,6 +73,29 @@ export async function updateOrderStatus(orderId, { status, version }) {
   };
 }
 
+export async function fetchMenu() {
+  const res = await fetch(`${BASE_URL}/api/menu`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch menu: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function updateMenuItemAvailability(itemId, isAvailable) {
+  const res = await fetch(`${BASE_URL}/api/menu/items/${encodeURIComponent(itemId)}/availability`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ is_available: isAvailable }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to update item availability (${res.status})`);
+  }
+
+  return res.json();
+}
+
 export async function checkBackendHealth() {
   try {
     const res = await fetch(`${BASE_URL}/api/health`, { cache: 'no-store' });

@@ -5,10 +5,12 @@ import ConflictBanner from '../components/ConflictBanner';
 import { updateOrderStatus } from '../services/api';
 
 const NEXT_STATUS_MAP = {
-  New: { next: 'Preparing', actionLabel: 'Start Preparing ⏳', btnColor: '#2563eb' },
-  Preparing: { next: 'Ready', actionLabel: 'Mark Ready ✓', btnColor: '#059669' },
-  Ready: { next: 'Served', actionLabel: 'Mark Served 🍽', btnColor: '#4f46e5' },
+  New: { next: 'Preparing', actionLabel: 'Démarrer la préparation ⏳', btnColor: '#2563eb' },
+  Preparing: { next: 'Ready', actionLabel: 'Marquer Prêt ✓', btnColor: '#059669' },
+  Ready: { next: 'Served', actionLabel: 'Marquer Servi 🍽', btnColor: '#4f46e5' },
 };
+
+const formatPrice = (amount) => `${Number(amount || 0).toLocaleString()} DA`;
 
 export default function KitchenView({ orders, onOrderUpdated }) {
   const [filterActiveOnly, setFilterActiveOnly] = useState(true);
@@ -243,12 +245,41 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                             fontSize: '0.88rem',
                             fontWeight: '500',
                             color: '#1e293b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
                           }}
                         >
-                          🍴 {item}
+                          <span>
+                            🍴 <strong>{item.quantity ? `${item.quantity}x ` : ''}</strong>{item.name || item}
+                          </span>
+                          {item.line_total > 0 && (
+                            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
+                              {formatPrice(item.line_total)}
+                            </span>
+                          )}
                         </li>
                       ))}
                     </ul>
+
+                    {ord.total_price > 0 && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginTop: '10px',
+                          paddingTop: '8px',
+                          borderTop: '1px dashed #cbd5e1',
+                          fontSize: '0.92rem',
+                          fontWeight: '800',
+                          color: '#0f172a',
+                        }}
+                      >
+                        <span>Total Commande :</span>
+                        <span style={{ color: '#059669' }}>{formatPrice(ord.total_price)}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Action Button */}
@@ -279,7 +310,7 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                           fontWeight: '600',
                         }}
                       >
-                        ✓ Order Completed (Served)
+                        ✓ Commande Terminée (Servie)
                       </div>
                     )}
                   </div>

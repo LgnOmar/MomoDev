@@ -17,7 +17,7 @@ def test_create_and_retrieve_order(client):
 
     assert created_data["id"].startswith("ORD-")
     assert created_data["customer_name"] == "Alice Johnson"
-    assert created_data["items"] == ["Classic Cheeseburger", "Large Curly Fries", "Iced Tea"]
+    assert [item["name"] for item in created_data["items"]] == ["Classic Cheeseburger", "Large Curly Fries", "Iced Tea"]
     assert created_data["status"] == "New"
     assert created_data["version"] == 1
     assert "created_at" in created_data
