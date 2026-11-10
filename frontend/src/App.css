@@ -1,4 +1,7 @@
-/* Global App Layout */
+/* ==========================================================================
+   Global App Layout & Design System
+   ========================================================================== */
+
 .app-container {
   min-height: 100vh;
   display: flex;
@@ -11,50 +14,87 @@
   width: 100%;
 }
 
-/* Responsive Container */
+/* Responsive Main Page Container */
 .page-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1220px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 18px 16px;
   box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
   .page-container {
-    padding: 24px;
+    padding: 28px 24px;
   }
 }
 
-/* Header Responsiveness */
+/* ==========================================================================
+   Modern App Header & Global Role Nav
+   ========================================================================== */
+
 .app-header {
-  background-color: #1e293b;
+  background: linear-gradient(135deg, #090d16 0%, #0f172a 45%, #1e293b 100%);
   color: #f8fafc;
-  padding: 12px 16px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  border-bottom: 3px solid #3b82f6;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-bottom: 2px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+  position: relative;
+  z-index: 50;
 }
 
 @media (min-width: 768px) {
   .app-header {
-    padding: 14px 24px;
+    padding: 16px 28px;
   }
 }
 
 .header-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.header-brand-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.4) 100%);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+.header-brand-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-brand-subtitle {
+  font-size: 0.74rem;
+  color: #94a3b8;
+  display: block;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .header-nav {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
   width: 100%;
@@ -63,7 +103,7 @@
 @media (min-width: 768px) {
   .header-nav {
     width: auto;
-    gap: 8px;
+    gap: 10px;
   }
 }
 
@@ -72,21 +112,38 @@
   text-align: center;
   justify-content: center;
   min-height: 40px;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  border-radius: 9999px;
+  padding: 8px 16px;
+  font-size: 0.86rem;
+  font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   white-space: nowrap;
+  background: rgba(255, 255, 255, 0.07);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.header-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.header-nav-btn.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: 1px solid #60a5fa;
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.45);
 }
 
 @media (min-width: 768px) {
   .header-nav-btn {
     flex: initial;
-    padding: 8px 16px;
   }
 }
 
@@ -94,37 +151,452 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #0f172a;
-  padding: 6px 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 6px 14px;
   border-radius: 9999px;
   font-size: 0.78rem;
-  font-weight: 600;
-  border: 1px solid #334155;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   white-space: nowrap;
 }
 
-/* Cashier Responsive Layout */
+.ws-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.ws-dot.live {
+  background-color: #10b981;
+  animation: pulseDot 2s infinite;
+}
+
+/* ==========================================================================
+   Page Headers & Hero Banners
+   ========================================================================== */
+
+.page-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.page-header-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-header-subtitle {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.page-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* ==========================================================================
+   Customer Self-Service Interface
+   ========================================================================== */
+
+.customer-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .customer-layout-grid {
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .customer-layout-grid {
+    grid-template-columns: 1fr 390px;
+    gap: 32px;
+  }
+}
+
+/* Meal Period Segmented Nav */
+.meal-periods-container {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  margin-bottom: 24px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.meal-period-btn {
+  flex: 1;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.meal-period-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.meal-period-btn.active {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.2);
+}
+
+/* Category Sections */
+.category-section {
+  background-color: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  padding: 20px 22px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
+  transition: border-color 0.2s ease;
+}
+
+.category-section:hover {
+  border-color: #cbd5e1;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.category-step-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #2563eb;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid #bfdbfe;
+  letter-spacing: 0.02em;
+}
+
+.category-title {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+/* Dishes Grid */
+.dishes-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 600px) {
+  .dishes-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+}
+
+/* Individual Dish Card */
+.dish-card {
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dish-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
+}
+
+.dish-card.unavailable {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  opacity: 0.85;
+}
+
+.dish-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+}
+
+.dish-description {
+  margin: 6px 0 12px 0;
+  font-size: 0.83rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.dish-price-pill {
+  font-weight: 800;
+  font-size: 0.98rem;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+  white-space: nowrap;
+}
+
+.dish-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Add to Cart Button */
+.btn-add-cart {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: all 0.15s ease-in-out;
+}
+
+.btn-add-cart:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-add-cart.in-cart {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+.btn-add-cart.in-cart:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Sticky Shopping Cart Panel */
+.cart-panel-sticky {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #3b82f6;
+  padding: 20px;
+  box-shadow: 0 6px 24px -2px rgba(59, 130, 246, 0.12), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
+}
+
+@media (min-width: 960px) {
+  .cart-panel-sticky {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+.cart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cart-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+  transition: background-color 0.15s ease;
+}
+
+.cart-item-row:hover {
+  background-color: #f1f5f9;
+}
+
+.cart-qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1e293b;
+  transition: all 0.15s ease;
+}
+
+.cart-qty-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.cart-total-box {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.btn-checkout {
+  width: 100%;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  min-height: 48px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-checkout:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-checkout:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Order Lifecycle Stepper
+   ========================================================================== */
+
+.stepper-wrap {
+  margin: 16px 0;
+  padding: 16px 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.stepper-label {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+@media (min-width: 480px) {
+  .stepper-label {
+    font-size: 0.8rem;
+  }
+}
+
+/* ==========================================================================
+   Cashier Interface
+   ========================================================================== */
+
 .cashier-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 20px;
+  gap: 24px;
   align-items: start;
 }
 
 @media (min-width: 900px) {
   .cashier-grid {
-    grid-template-columns: 380px 1fr;
-    gap: 24px;
+    grid-template-columns: 390px 1fr;
+    gap: 28px;
   }
 }
 
 @media (min-width: 1100px) {
   .cashier-grid {
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 430px 1fr;
   }
 }
 
-/* Quick Add Items Buttons */
 .quick-items-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -132,32 +604,47 @@
 }
 
 .quick-item-btn {
-  background: #f1f5f9;
+  background: #f8fafc;
   border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 8px 12px;
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   color: #1e293b;
   min-height: 36px;
   display: inline-flex;
   align-items: center;
+  transition: all 0.15s ease;
 }
 
-@media (hover: hover) {
-  .quick-item-btn:hover {
-    background: #e2e8f0;
-    border-color: #94a3b8;
+.quick-item-btn:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.availability-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 600px) {
+  .availability-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   }
 }
 
-/* Kitchen Responsive Layout */
+/* ==========================================================================
+   Kitchen Display System (KDS)
+   ========================================================================== */
+
 .kitchen-header {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 @media (min-width: 640px) {
@@ -171,127 +658,67 @@
 .kitchen-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 18px;
 }
 
 @media (min-width: 640px) {
   .kitchen-grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 22px;
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1080px) {
   .kitchen-grid {
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   }
 }
 
-/* Kitchen Ticket Action Button */
+.kitchen-ticket-card {
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
 .kitchen-action-btn {
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
   padding: 12px 16px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: 800;
+  font-size: 0.96rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   touch-action: manipulation;
+  transition: all 0.2s ease;
 }
 
-/* Customer View Responsive */
-.customer-container {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 16px;
+.kitchen-action-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
 }
 
-@media (min-width: 640px) {
-  .customer-container {
-    padding: 24px 16px;
-  }
-}
+/* ==========================================================================
+   Tracking Bar & Utilities
+   ========================================================================== */
 
-.customer-search-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-  background-color: #ffffff;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #cbd5e1;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-}
-
-@media (min-width: 480px) {
-  .customer-search-form {
-    flex-direction: row;
-  }
-}
-
-.customer-search-input {
-  flex: 1;
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 1rem;
-  outline: none;
-}
-
-@media (min-width: 480px) {
-  .customer-search-input {
-    border: none;
-  }
-}
-
-.customer-search-btn {
-  background-color: #2563eb;
-  color: #ffffff;
-  border: none;
-  padding: 12px 22px;
-  border-radius: 6px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  cursor: pointer;
-  min-height: 44px;
-}
-
-/* Stepper Mobile Adaptability */
-.stepper-wrap {
-  margin: 14px 0;
-  padding: 14px 8px;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-.stepper-label {
-  margin-top: 6px;
-  font-size: 0.7rem;
-  text-align: center;
-}
-
-@media (min-width: 480px) {
-  .stepper-label {
-    font-size: 0.78rem;
-  }
-}
-
-/* Tracking Link Bar in Cashier & Kitchen */
 .tracking-bar {
   margin-top: 12px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   background-color: #f1f5f9;
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 @media (min-width: 500px) {
@@ -314,80 +741,103 @@
   }
 }
 
-.tracking-bar-actions button,
-.tracking-bar-actions a {
-  flex: 1;
-  text-align: center;
-  justify-content: center;
-  min-height: 36px;
-}
-
-@media (min-width: 500px) {
-  .tracking-bar-actions button,
-  .tracking-bar-actions a {
-    flex: initial;
-  }
-}
-
-/* Customer Menu & Cart Responsive Layout */
-.customer-layout-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-  align-items: start;
-}
-
-@media (min-width: 960px) {
-  .customer-layout-grid {
-    grid-template-columns: 1fr 350px;
-    gap: 24px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .customer-layout-grid {
-    grid-template-columns: 1fr 380px;
-    gap: 28px;
-  }
-}
-
-.cart-panel-sticky {
+.customer-search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
   background-color: #ffffff;
+  padding: 8px;
   border-radius: 12px;
-  border: 2px solid #3b82f6;
-  padding: 18px;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
-@media (min-width: 960px) {
-  .cart-panel-sticky {
-    position: sticky;
-    top: 20px;
+@media (min-width: 480px) {
+  .customer-search-form {
+    flex-direction: row;
   }
 }
 
-/* Category Dishes Grid */
-.dishes-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
+.customer-search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
 }
 
-@media (min-width: 600px) {
-  .dishes-grid {
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+@media (min-width: 480px) {
+  .customer-search-input {
+    border: none;
   }
 }
 
-/* Cashier Menu Availability Grid */
-.availability-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
+.customer-search-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  min-height: 44px;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
 }
 
-@media (min-width: 600px) {
-  .availability-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+.customer-search-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+/* ==========================================================================
+   Application Footer
+   ========================================================================== */
+
+.app-footer {
+  margin-top: auto;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  padding: 20px 18px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.app-footer-inner {
+  max-width: 1220px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justifyContent: space-between;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: #64748b;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .app-footer-inner {
+    flex-direction: row;
+    text-align: left;
   }
+}
+
+.app-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e293b;
+  font-weight: 600;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.app-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 0.78rem;
 }

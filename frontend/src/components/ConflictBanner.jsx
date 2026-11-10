@@ -9,35 +9,38 @@ export default function ConflictBanner({ message, onDismiss }) {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '12px 16px',
+        padding: '14px 18px',
         backgroundColor: '#fffbeb',
-        border: '1px solid #fde68a',
-        borderRadius: '8px',
+        border: '1px solid #fcd34d',
+        borderRadius: '12px',
         color: '#92400e',
-        marginBottom: '16px',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+        marginBottom: '20px',
+        boxShadow: '0 4px 12px rgba(245, 158, 11, 0.12)',
+        animation: 'fadeIn 0.25s ease-out',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '1.4rem' }}>⚡</span>
         <div>
-          <strong>Concurrency Notice:</strong>
-          <div style={{ fontSize: '0.88rem', marginTop: '2px' }}>{message}</div>
+          <strong style={{ fontSize: '0.92rem', color: '#78350f' }}>Avis de Synchronisation Simultanée (OCC)</strong>
+          <div style={{ fontSize: '0.85rem', marginTop: '2px', lineHeight: 1.4 }}>{message}</div>
         </div>
       </div>
       {onDismiss && (
         <button
           onClick={onDismiss}
           style={{
-            background: 'transparent',
+            background: 'rgba(180, 83, 9, 0.1)',
             border: 'none',
-            fontSize: '1.1rem',
+            borderRadius: '6px',
+            fontSize: '1rem',
             cursor: 'pointer',
-            color: '#b45309',
-            padding: '4px 8px',
+            color: '#92400e',
+            padding: '6px 10px',
             lineHeight: 1,
+            fontWeight: 'bold',
           }}
-          title="Dismiss notification"
+          title="Fermer"
         >
           ✕
         </button>

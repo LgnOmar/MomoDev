@@ -6,8 +6,8 @@ import { updateOrderStatus } from '../services/api';
 
 const NEXT_STATUS_MAP = {
   New: { next: 'Preparing', actionLabel: 'Démarrer la préparation ⏳', btnColor: '#2563eb' },
-  Preparing: { next: 'Ready', actionLabel: 'Marquer Prêt ✓', btnColor: '#059669' },
-  Ready: { next: 'Served', actionLabel: 'Marquer Servi 🍽', btnColor: '#4f46e5' },
+  Preparing: { next: 'Ready', actionLabel: 'Marquer Prêt au comptoir 🔔', btnColor: '#059669' },
+  Ready: { next: 'Served', actionLabel: 'Marquer Servi aux clients ✨', btnColor: '#4f46e5' },
 };
 
 const formatPrice = (amount) => `${Number(amount || 0).toLocaleString()} DA`;
@@ -58,51 +58,67 @@ export default function KitchenView({ orders, onOrderUpdated }) {
 
   return (
     <div className="page-container">
-      <div className="kitchen-header">
+      <div className="page-header-wrap">
         <div>
-          <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a', margin: '0 0 4px 0' }}>
-            Kitchen Display System (KDS)
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span className="page-badge-pill">👨‍🍳 Écran Cuisine KDS</span>
+            <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: '600' }}>• Synchronisation Temps Réel WebSocket</span>
+          </div>
+          <h2 className="page-header-title">
+            🍳 Système d'Affichage Cuisine (KDS)
           </h2>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '0.88rem' }}>
-            Live ticket queue. Advance statuses as orders move through prep. All updates broadcast immediately.
+          <p className="page-header-subtitle">
+            File des commandes en direct. Avancez les statuts au fur et à mesure de la préparation des plats.
           </p>
         </div>
 
-        {/* Filter Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#e2e8f0', padding: '4px', borderRadius: '8px', alignSelf: 'flex-start' }}>
+        {/* Filter Toggle Segmented Control */}
+        <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <button
             onClick={() => setFilterActiveOnly(true)}
             style={{
-              padding: '8px 14px',
-              borderRadius: '6px',
+              padding: '9px 18px',
+              borderRadius: '9px',
               border: 'none',
               background: filterActiveOnly ? '#ffffff' : 'transparent',
-              color: filterActiveOnly ? '#0f172a' : '#64748b',
-              fontWeight: filterActiveOnly ? '700' : '600',
-              fontSize: '0.82rem',
+              color: filterActiveOnly ? '#1d4ed8' : '#64748b',
+              fontWeight: filterActiveOnly ? '800' : '600',
+              fontSize: '0.86rem',
               cursor: 'pointer',
-              boxShadow: filterActiveOnly ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              minHeight: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: filterActiveOnly ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
-            Active ({orders.filter((o) => o.status !== 'Served').length})
+            <span>🔥 En cours</span>
+            <span style={{ fontSize: '0.74rem', background: filterActiveOnly ? '#eff6ff' : '#e2e8f0', color: filterActiveOnly ? '#2563eb' : '#475569', padding: '1px 7px', borderRadius: '999px', fontWeight: '800' }}>
+              {orders.filter((o) => o.status !== 'Served').length}
+            </span>
           </button>
           <button
             onClick={() => setFilterActiveOnly(false)}
             style={{
-              padding: '8px 14px',
-              borderRadius: '6px',
+              padding: '9px 18px',
+              borderRadius: '9px',
               border: 'none',
               background: !filterActiveOnly ? '#ffffff' : 'transparent',
-              color: !filterActiveOnly ? '#0f172a' : '#64748b',
-              fontWeight: !filterActiveOnly ? '700' : '600',
-              fontSize: '0.82rem',
+              color: !filterActiveOnly ? '#1d4ed8' : '#64748b',
+              fontWeight: !filterActiveOnly ? '800' : '600',
+              fontSize: '0.86rem',
               cursor: 'pointer',
-              boxShadow: !filterActiveOnly ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              minHeight: '36px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: !filterActiveOnly ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
-            All ({orders.length})
+            <span>📋 Toutes</span>
+            <span style={{ fontSize: '0.74rem', background: !filterActiveOnly ? '#eff6ff' : '#e2e8f0', color: !filterActiveOnly ? '#2563eb' : '#475569', padding: '1px 7px', borderRadius: '999px', fontWeight: '800' }}>
+              {orders.length}
+            </span>
           </button>
         </div>
       </div>
@@ -140,19 +156,20 @@ export default function KitchenView({ orders, onOrderUpdated }) {
         <div
           style={{
             backgroundColor: '#ffffff',
-            borderRadius: '10px',
-            border: '1px solid #e2e8f0',
-            padding: '50px 20px',
+            borderRadius: '16px',
+            border: '2px dashed #cbd5e1',
+            padding: '56px 20px',
             textAlign: 'center',
-            color: '#94a3b8',
+            color: '#64748b',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.02)',
           }}
         >
-          <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🍳</div>
-          <h3 style={{ margin: '0 0 6px 0', color: '#475569', fontSize: '1.15rem' }}>
-            No tickets to prepare
+          <div style={{ fontSize: '3.2rem', marginBottom: '12px' }}>🍳</div>
+          <h3 style={{ margin: '0 0 6px 0', color: '#0f172a', fontSize: '1.2rem', fontWeight: '800' }}>
+            Aucun ticket en cuisine
           </h3>
-          <p style={{ margin: 0, fontSize: '0.88rem' }}>
-            {filterActiveOnly ? 'All orders are currently served!' : 'No orders have been entered yet.'}
+          <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b' }}>
+            {filterActiveOnly ? 'Tous les plats sont actuellement préparés et servis !' : 'Aucune commande enregistrée pour le moment.'}
           </p>
         </div>
       ) : (
@@ -160,47 +177,50 @@ export default function KitchenView({ orders, onOrderUpdated }) {
           {displayedOrders.map((ord) => {
             const nextAction = NEXT_STATUS_MAP[ord.status];
             const isUpdating = updatingId === ord.id;
+            const cardBorderColor =
+              ord.status === 'Preparing'
+                ? '#f59e0b'
+                : ord.status === 'Ready'
+                ? '#10b981'
+                : ord.status === 'Served'
+                ? '#cbd5e1'
+                : '#3b82f6';
 
             return (
               <div
                 key={ord.id}
+                className="kitchen-ticket-card"
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: '10px',
-                  border: `2px solid ${ord.status === 'Preparing' ? '#fbbf24' : ord.status === 'Ready' ? '#34d399' : '#e2e8f0'}`,
-                  boxShadow: '0 3px 6px rgba(0,0,0,0.05)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  overflow: 'hidden',
+                  border: `2px solid ${cardBorderColor}`,
                 }}
               >
                 {/* Header Strip */}
                 <div
                   style={{
-                    padding: '12px 16px',
-                    backgroundColor: '#f8fafc',
+                    padding: '14px 18px',
+                    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
                     borderBottom: '1px solid #e2e8f0',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
-                    gap: '6px',
+                    gap: '8px',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: '800', fontSize: '1.05rem', color: '#0f172a' }}>
+                    <span style={{ fontWeight: '800', fontSize: '1.15rem', color: '#0f172a', letterSpacing: '-0.01em' }}>
                       {ord.id}
                     </span>
                     <span
                       style={{
                         fontSize: '0.72rem',
-                        fontWeight: '600',
-                        color: '#64748b',
+                        fontWeight: '700',
+                        color: '#475569',
                         backgroundColor: '#e2e8f0',
-                        padding: '2px 6px',
+                        padding: '2px 7px',
                         borderRadius: '4px',
                       }}
-                      title="Optimistic concurrency control version counter"
+                      title="Optimistic Concurrency Control (OCC) version"
                     >
                       v{ord.version}
                     </span>
@@ -208,50 +228,59 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                   <StatusBadge status={ord.status} />
                 </div>
 
-                <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ fontWeight: '700', fontSize: '1rem', color: '#1e293b', marginBottom: '2px' }}>
-                    👤 {ord.customer_name}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '10px' }}>
-                    Received: {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                <div style={{ padding: '18px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
+                    <div style={{ fontWeight: '800', fontSize: '1.05rem', color: '#0f172a' }}>
+                      👤 {ord.customer_name}
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: '600' }}>
+                      Reçue à {new Date(ord.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </div>
                   </div>
 
                   {/* Lifecycle Stepper */}
                   <OrderLifecycleStepper currentStatus={ord.status} />
 
                   {/* Ordered Items Structured Table */}
-                  <div style={{ marginTop: '10px', flex: 1 }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Détails de la Commande :
-                    </span>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '0.84rem' }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#64748b', textAlign: 'left' }}>
-                          <th style={{ padding: '4px 6px' }}>Plat</th>
-                          <th style={{ padding: '4px 6px', textAlign: 'center' }}>Qté</th>
-                          <th style={{ padding: '4px 6px', textAlign: 'right' }}>Prix U.</th>
-                          <th style={{ padding: '4px 6px', textAlign: 'right' }}>Sous-total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ord.items.map((item, idx) => (
-                          <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                            <td style={{ padding: '6px', fontWeight: '600', color: '#1e293b' }}>
-                              {item.name || item}
-                            </td>
-                            <td style={{ padding: '6px', textAlign: 'center', fontWeight: '700', color: '#2563eb' }}>
-                              {item.quantity || 1}
-                            </td>
-                            <td style={{ padding: '6px', textAlign: 'right', color: '#64748b' }}>
-                              {item.unit_price > 0 ? formatPrice(item.unit_price) : '-'}
-                            </td>
-                            <td style={{ padding: '6px', textAlign: 'right', fontWeight: '700', color: '#0f172a' }}>
-                              {item.line_total > 0 ? formatPrice(item.line_total) : '-'}
-                            </td>
+                  <div style={{ marginTop: '14px', flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Détails des Plats ({ord.items.length})
+                      </span>
+                    </div>
+
+                    <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', textAlign: 'left' }}>
+                            <th style={{ padding: '8px 10px', fontWeight: '700' }}>Plat</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '700' }}>Qté</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700' }}>Prix U.</th>
+                            <th style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700' }}>Sous-total</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {ord.items.map((item, idx) => (
+                            <tr key={idx} style={{ borderBottom: idx < ord.items.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                              <td style={{ padding: '8px 10px', fontWeight: '700', color: '#1e293b' }}>
+                                {item.name || item}
+                              </td>
+                              <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                                <span style={{ background: '#eff6ff', color: '#2563eb', padding: '2px 8px', borderRadius: '6px', fontWeight: '800', fontSize: '0.8rem' }}>
+                                  {item.quantity || 1}
+                                </span>
+                              </td>
+                              <td style={{ padding: '8px 10px', textAlign: 'right', color: '#64748b' }}>
+                                {item.unit_price > 0 ? formatPrice(item.unit_price) : '-'}
+                              </td>
+                              <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: '#0f172a' }}>
+                                {item.line_total > 0 ? formatPrice(item.line_total) : '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
                     {ord.total_price > 0 && (
                       <div
@@ -259,22 +288,24 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          marginTop: '10px',
-                          paddingTop: '8px',
-                          borderTop: '2px solid #e2e8f0',
-                          fontSize: '0.95rem',
+                          marginTop: '12px',
+                          padding: '10px 14px',
+                          background: '#f8fafc',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '0.98rem',
                           fontWeight: '800',
                           color: '#0f172a',
                         }}
                       >
-                        <span>Total Commande :</span>
-                        <span style={{ color: '#059669' }}>{formatPrice(ord.total_price)}</span>
+                        <span>Total de la Commande :</span>
+                        <span style={{ color: '#059669', fontSize: '1.1rem' }}>{formatPrice(ord.total_price)}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Action Button */}
-                  <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9' }}>
+                  <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9' }}>
                     {nextAction ? (
                       <button
                         onClick={() => handleAdvanceStatus(ord)}
@@ -284,24 +315,25 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                           backgroundColor: nextAction.btnColor,
                           color: '#ffffff',
                           opacity: isUpdating ? 0.7 : 1,
-                          boxShadow: `0 2px 4px ${nextAction.btnColor}40`,
+                          boxShadow: `0 4px 12px ${nextAction.btnColor}40`,
                         }}
                       >
-                        {isUpdating ? 'Updating...' : nextAction.actionLabel}
+                        {isUpdating ? 'Mise à jour en cours...' : nextAction.actionLabel}
                       </button>
                     ) : (
                       <div
                         style={{
                           textAlign: 'center',
                           padding: '12px',
-                          backgroundColor: '#f1f5f9',
-                          borderRadius: '8px',
+                          backgroundColor: '#ecfdf5',
+                          border: '1px solid #a7f3d0',
+                          borderRadius: '10px',
                           fontSize: '0.88rem',
-                          color: '#475569',
-                          fontWeight: '600',
+                          color: '#065f46',
+                          fontWeight: '700',
                         }}
                       >
-                        ✓ Commande Terminée (Servie)
+                        ✓ Commande Terminée & Servie
                       </div>
                     )}
                   </div>

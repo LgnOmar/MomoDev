@@ -238,6 +238,23 @@ export default function App() {
           />
         )}
       </main>
+
+      <footer className="app-footer">
+        <div className="app-footer-inner">
+          <div className="app-footer-brand">
+            <span style={{ fontSize: '1.15rem' }}>🍽️</span>
+            <strong>Le Relais Gastronomique</strong>
+            <span style={{ color: '#94a3b8' }}>• Système Intégré de Commande & KDS</span>
+          </div>
+          <div className="app-footer-meta">
+            <span>Devise : <strong>Dinar Algérien (DA)</strong></span>
+            <span>•</span>
+            <span>Synchronisation : <strong>WebSocket Bi-directionnel</strong></span>
+            <span>•</span>
+            <span>Concurrence : <strong>OCC v-counter</strong></span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

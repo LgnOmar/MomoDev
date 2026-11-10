@@ -14,6 +14,26 @@ const STATUS_MESSAGES = {
 
 const formatPrice = (amount) => `${Number(amount || 0).toLocaleString()} DA`;
 
+const CATEGORY_ICONS = {
+  'Beverages / Liquid Start': '☕',
+  'Fruit & Bakery': '🥐',
+  'Cereals & Grains': '🌾',
+  'Main Plates': '🍳',
+  'Appetizer / Starter': '🥟',
+  'Main Course': '🍲',
+  'Sides': '🍟',
+  'Dessert': '🍮',
+  'Hors d’œuvre': '🍢',
+  'Amuse-bouche': '🥄',
+  'Soup': '🥣',
+  'Salad': '🥗',
+  'Fish / Seafood Course': '🐟',
+  'Palate Cleanser': '🍧',
+  'Cheese Course': '🧀',
+  'Mignardises / Petit Fours': '🍬',
+  'Digestif & Beverages': '🍵',
+};
+
 export default function CustomerView({
   initialOrderId,
   allOrders,
@@ -232,71 +252,70 @@ export default function CustomerView({
   );
 
   return (
-    <div className="page-container" style={{ maxWidth: '1100px' }}>
-      {/* Top Navigation & Mode Switcher */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-          marginBottom: '20px',
-        }}
-      >
+    <div className="page-container" style={{ maxWidth: '1180px' }}>
+      {/* Top Header & Mode Switcher */}
+      <div className="page-header-wrap">
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: '800', color: '#0f172a', margin: '0 0 4px 0' }}>
-            {activeTab === 'menu' ? 'Menu & Commande en Ligne' : 'Suivi de Commande en Direct'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span className="page-badge-pill">✨ Restaurant Gastronomique</span>
+            <span style={{ fontSize: '0.76rem', color: '#64748b', fontWeight: '600' }}>• Commande Directe & Suivi Temps Réel</span>
+          </div>
+          <h2 className="page-header-title">
+            {activeTab === 'menu' ? '🍽️ Carte des Menus & Commande' : '📱 Suivi de Commande en Direct'}
           </h2>
-          <p style={{ margin: 0, color: '#64748b', fontSize: '0.88rem' }}>
+          <p className="page-header-subtitle">
             {activeTab === 'menu'
-              ? 'Découvrez nos spécialités et commandez directement en cuisine en quelques clics.'
-              : 'Suivez la préparation de vos plats en temps réel.'}
+              ? 'Découvrez nos créations culinaires et commandez directement en cuisine en quelques clics.'
+              : 'Visualisez l\'avancement de la préparation de vos plats en temps réel sans rafraîchir.'}
           </p>
         </div>
 
-        {/* View Mode Toggle */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        {/* View Mode Toggle Segmented Control */}
+        <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <button
             onClick={() => setActiveTab('menu')}
             style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: activeTab === 'menu' ? '2px solid #2563eb' : '1px solid #cbd5e1',
-              backgroundColor: activeTab === 'menu' ? '#eff6ff' : '#ffffff',
-              color: activeTab === 'menu' ? '#1d4ed8' : '#475569',
-              fontWeight: '700',
+              padding: '9px 18px',
+              borderRadius: '9px',
+              border: 'none',
+              backgroundColor: activeTab === 'menu' ? '#ffffff' : 'transparent',
+              color: activeTab === 'menu' ? '#1d4ed8' : '#64748b',
+              fontWeight: activeTab === 'menu' ? '800' : '600',
               fontSize: '0.88rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              boxShadow: activeTab === 'menu' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             <span>📖</span>
-            <span>Menu</span>
+            <span>La Carte</span>
           </button>
 
           <button
             onClick={() => setActiveTab('tracking')}
             style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: activeTab === 'tracking' ? '2px solid #2563eb' : '1px solid #cbd5e1',
-              backgroundColor: activeTab === 'tracking' ? '#eff6ff' : '#ffffff',
-              color: activeTab === 'tracking' ? '#1d4ed8' : '#475569',
-              fontWeight: '700',
+              padding: '9px 18px',
+              borderRadius: '9px',
+              border: 'none',
+              backgroundColor: activeTab === 'tracking' ? '#ffffff' : 'transparent',
+              color: activeTab === 'tracking' ? '#1d4ed8' : '#64748b',
+              fontWeight: activeTab === 'tracking' ? '800' : '600',
               fontSize: '0.88rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
+              boxShadow: activeTab === 'tracking' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.15s ease',
             }}
           >
             <span>📱</span>
-            <span>Suivi Commande</span>
+            <span>Suivi</span>
             {trackedOrder && (
-              <span style={{ fontSize: '0.75rem', background: '#3b82f6', color: '#fff', padding: '1px 6px', borderRadius: '999px' }}>
+              <span style={{ fontSize: '0.72rem', background: '#2563eb', color: '#fff', padding: '1px 7px', borderRadius: '999px', fontWeight: '800' }}>
                 {trackedOrder.id}
               </span>
             )}
@@ -311,78 +330,53 @@ export default function CustomerView({
         <div className="customer-layout-grid">
           {/* Main Menu Column */}
           <div style={{ minWidth: 0 }}>
-            {/* Meal Period Tabs */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '8px',
-                borderBottom: '2px solid #e2e8f0',
-                paddingBottom: '8px',
-                marginBottom: '20px',
-                overflowX: 'auto',
-              }}
-            >
+            {/* Meal Period Segmented Nav */}
+            <div className="meal-periods-container">
               {MEAL_PERIODS.map((period) => {
                 const isSelected = selectedMealPeriod === period;
                 return (
                   <button
                     key={period}
+                    type="button"
                     onClick={() => setSelectedMealPeriod(period)}
-                    style={{
-                      padding: '10px 18px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      backgroundColor: isSelected ? '#1e293b' : '#f1f5f9',
-                      color: isSelected ? '#ffffff' : '#475569',
-                      fontWeight: isSelected ? '700' : '600',
-                      fontSize: '0.92rem',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      boxShadow: isSelected ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                      transition: 'all 0.15s ease',
-                    }}
+                    className={`meal-period-btn ${isSelected ? 'active' : ''}`}
                   >
-                    {period === 'Breakfast' && '🌅 '}
-                    {period === 'Lunch' && '🥗 '}
-                    {period === 'Dinner & Full-Course Meal' && '🍷 '}
-                    {period}
+                    {period === 'Breakfast' && '🌅 Petit-Déjeuner'}
+                    {period === 'Lunch' && '🥗 Déjeuner'}
+                    {period === 'Dinner & Full-Course Meal' && '🍷 Dîner & Grand Menu'}
                   </button>
                 );
               })}
             </div>
 
             {selectedMealPeriod === 'Dinner & Full-Course Meal' && (
-              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', marginBottom: '18px', fontSize: '0.82rem', color: '#475569' }}>
-                💡 <strong>Menu gastronomique à la carte :</strong> Vous pouvez librement composer votre repas selon vos envies parmi les 12 étapes proposées ci-dessous (la sélection de chaque étape est entièrement optionnelle).
+              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px 16px', marginBottom: '22px', fontSize: '0.84rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '1.2rem' }}>💡</span>
+                <div>
+                  <strong>Menu gastronomique à la carte :</strong> Vous pouvez librement composer votre repas selon vos envies parmi les 12 étapes proposées ci-dessous (la sélection de chaque étape est entièrement optionnelle).
+                </div>
               </div>
             )}
 
             {loadingMenu ? (
               <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748b' }}>
-                Chargement du menu...
+                <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div>
+                Chargement du menu gastronomique...
               </div>
             ) : currentCategories.length === 0 ? (
               <div style={{ padding: '40px 20px', textAlign: 'center', color: '#94a3b8' }}>
                 Aucune catégorie trouvée pour {selectedMealPeriod}.
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 {currentCategories.map((cat, catIdx) => (
-                  <section
-                    key={cat.id}
-                    style={{
-                      backgroundColor: '#ffffff',
-                      borderRadius: '10px',
-                      border: '1px solid #e2e8f0',
-                      padding: '18px 20px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
-                      <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#3b82f6', backgroundColor: '#eff6ff', padding: '2px 8px', borderRadius: '4px' }}>
+                  <section key={cat.id} className="category-section">
+                    <div className="category-header">
+                      <span className="category-step-badge">
                         Étape {cat.display_order}
                       </span>
-                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#1e293b' }}>
+                      <h3 className="category-title">
+                        <span style={{ marginRight: '6px' }}>{CATEGORY_ICONS[cat.name] || '🍽️'}</span>
                         {cat.name}
                       </h3>
                     </div>
@@ -393,33 +387,24 @@ export default function CustomerView({
                         return (
                           <div
                             key={item.id}
-                            style={{
-                              border: `1px solid ${item.is_available ? '#e2e8f0' : '#fecaca'}`,
-                              borderRadius: '8px',
-                              padding: '14px',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'space-between',
-                              backgroundColor: item.is_available ? '#fcfcfd' : '#fef2f2',
-                              opacity: item.is_available ? 1 : 0.85,
-                            }}
+                            className={`dish-card ${!item.is_available ? 'unavailable' : ''}`}
                           >
                             <div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '4px' }}>
-                                <h4 style={{ margin: 0, fontSize: '0.98rem', fontWeight: '700', color: '#0f172a' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                                <h4 className="dish-title">
                                   {item.name}
                                 </h4>
-                                <span style={{ fontWeight: '800', fontSize: '0.98rem', color: '#059669', whiteSpace: 'nowrap' }}>
+                                <span className="dish-price-pill">
                                   {formatPrice(item.price)}
                                 </span>
                               </div>
 
-                              <p style={{ margin: '0 0 10px 0', fontSize: '0.82rem', color: '#64748b', lineHeight: 1.4 }}>
+                              <p className="dish-description">
                                 {item.description}
                               </p>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+                            <div className="dish-footer">
                               <span
                                 style={{
                                   fontSize: '0.75rem',
@@ -427,30 +412,27 @@ export default function CustomerView({
                                   color: item.is_available ? '#059669' : '#dc2626',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '4px',
+                                  gap: '5px',
                                 }}
                               >
-                                {item.is_available ? '● Disponible' : '✕ Épuisé'}
+                                {item.is_available ? (
+                                  <>
+                                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+                                    Disponible
+                                  </>
+                                ) : (
+                                  <>
+                                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                                    Épuisé
+                                  </>
+                                )}
                               </span>
 
                               {item.is_available ? (
                                 <button
                                   type="button"
                                   onClick={() => handleAddToCart(item)}
-                                  style={{
-                                    backgroundColor: inCart ? '#10b981' : '#2563eb',
-                                    color: '#ffffff',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    padding: '6px 12px',
-                                    fontSize: '0.82rem',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '4px',
-                                    transition: 'all 0.15s ease',
-                                  }}
+                                  className={`btn-add-cart ${inCart ? 'in-cart' : ''}`}
                                 >
                                   {inCart ? `+ Ajouter (${inCart.quantity})` : '+ Ajouter au panier'}
                                 </button>
@@ -458,11 +440,11 @@ export default function CustomerView({
                                 <button
                                   disabled
                                   style={{
-                                    backgroundColor: '#e2e8f0',
+                                    backgroundColor: '#f1f5f9',
                                     color: '#94a3b8',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    padding: '6px 12px',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '8px',
+                                    padding: '7px 14px',
                                     fontSize: '0.82rem',
                                     fontWeight: '600',
                                     cursor: 'not-allowed',
@@ -484,18 +466,21 @@ export default function CustomerView({
 
           {/* Floating / Sticky Shopping Cart Panel */}
           <div className="cart-panel-sticky">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid #e2e8f0', paddingBottom: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="cart-header">
+              <div className="cart-title">
                 <span style={{ fontSize: '1.3rem' }}>🛒</span>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#0f172a' }}>
-                  Votre Panier
-                </h3>
+                <span>Votre Panier</span>
+                {cart.length > 0 && (
+                  <span style={{ fontSize: '0.74rem', background: '#eff6ff', color: '#2563eb', padding: '2px 8px', borderRadius: '999px', fontWeight: '800', border: '1px solid #bfdbfe' }}>
+                    {cartItemCount}
+                  </span>
+                )}
               </div>
               {cart.length > 0 && (
                 <button
                   type="button"
                   onClick={handleClearCart}
-                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.78rem', cursor: 'pointer', fontWeight: '600' }}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.8rem', cursor: 'pointer', fontWeight: '700' }}
                 >
                   Vider
                 </button>
@@ -508,45 +493,37 @@ export default function CustomerView({
                   backgroundColor: '#fef2f2',
                   border: '1px solid #fecaca',
                   color: '#b91c1c',
-                  padding: '10px 14px',
-                  borderRadius: '6px',
+                  padding: '12px 14px',
+                  borderRadius: '10px',
                   fontSize: '0.85rem',
-                  marginBottom: '14px',
+                  marginBottom: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
               >
-                ⚠️ {orderError}
+                <span>⚠️</span>
+                <span>{orderError}</span>
               </div>
             )}
 
             {cart.length === 0 ? (
-              <div style={{ padding: '24px 12px', textAlign: 'center', color: '#94a3b8' }}>
-                <div style={{ fontSize: '2rem', marginBottom: '6px' }}>🍽️</div>
-                <div style={{ fontWeight: '600', fontSize: '0.9rem', color: '#64748b' }}>Votre panier est vide</div>
-                <div style={{ fontSize: '0.8rem', marginTop: '2px' }}>Sélectionnez des plats ci-dessus pour composer votre commande.</div>
+              <div style={{ padding: '36px 12px', textAlign: 'center', color: '#94a3b8' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🍽️</div>
+                <div style={{ fontWeight: '700', fontSize: '0.96rem', color: '#475569' }}>Votre panier est vide</div>
+                <div style={{ fontSize: '0.82rem', marginTop: '4px', color: '#94a3b8' }}>Sélectionnez des plats ci-dessus pour composer votre repas.</div>
               </div>
             ) : (
               <div>
-                <ul style={{ margin: '0 0 16px 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '280px', overflowY: 'auto' }}>
+                <ul style={{ margin: '0 0 16px 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
                   {cart.map((ci) => (
-                    <li
-                      key={ci.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '8px 10px',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: '6px',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '0.88rem',
-                      }}
-                    >
+                    <li key={ci.id} className="cart-item-row">
                       <div style={{ flex: 1, minWidth: 0, marginRight: '10px' }}>
-                        <div style={{ fontWeight: '600', color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.88rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {ci.name}
                         </div>
-                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                          {formatPrice(ci.price)} unitaire • {formatPrice(ci.price * ci.quantity)}
+                        <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: '2px' }}>
+                          {formatPrice(ci.price)} unitaire • <strong>{formatPrice(ci.price * ci.quantity)}</strong>
                         </div>
                       </div>
 
@@ -555,39 +532,19 @@ export default function CustomerView({
                         <button
                           type="button"
                           onClick={() => handleUpdateQuantity(ci.id, -1)}
-                          style={{
-                            width: '26px',
-                            height: '26px',
-                            borderRadius: '4px',
-                            border: '1px solid #cbd5e1',
-                            background: '#ffffff',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                          className="cart-qty-btn"
+                          title="Diminuer"
                         >
                           -
                         </button>
-                        <span style={{ fontWeight: '700', fontSize: '0.88rem', minWidth: '18px', textAlign: 'center' }}>
+                        <span style={{ fontWeight: '800', fontSize: '0.9rem', minWidth: '20px', textAlign: 'center', color: '#0f172a' }}>
                           {ci.quantity}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleUpdateQuantity(ci.id, 1)}
-                          style={{
-                            width: '26px',
-                            height: '26px',
-                            borderRadius: '4px',
-                            border: '1px solid #cbd5e1',
-                            background: '#ffffff',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                          className="cart-qty-btn"
+                          title="Augmenter"
                         >
                           +
                         </button>
@@ -601,7 +558,8 @@ export default function CustomerView({
                             cursor: 'pointer',
                             marginLeft: '4px',
                             fontWeight: 'bold',
-                            padding: '2px 4px',
+                            padding: '4px 6px',
+                            borderRadius: '4px',
                           }}
                           title="Supprimer"
                         >
@@ -612,17 +570,17 @@ export default function CustomerView({
                   ))}
                 </ul>
 
-                {/* Subtotal & Total */}
-                <div style={{ borderTop: '2px dashed #e2e8f0', paddingTop: '12px', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#64748b', marginBottom: '4px' }}>
+                {/* Subtotal & Total Box */}
+                <div className="cart-total-box">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.84rem', color: '#64748b', marginBottom: '6px' }}>
                     <span>Nombre d'articles :</span>
-                    <span>{cartItemCount} article{cartItemCount > 1 ? 's' : ''}</span>
+                    <span style={{ fontWeight: '700', color: '#334155' }}>{cartItemCount} article{cartItemCount > 1 ? 's' : ''}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: '800', color: '#0f172a' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '1.15rem', fontWeight: '800', color: '#0f172a', paddingTop: '8px', borderTop: '1px dashed #cbd5e1' }}>
                     <span>Total Estimé :</span>
-                    <span style={{ color: '#059669' }}>{formatPrice(cartSubtotal)}</span>
+                    <span style={{ color: '#059669', fontSize: '1.2rem' }}>{formatPrice(cartSubtotal)}</span>
                   </div>
-                  <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8', display: 'block', marginTop: '6px' }}>
                     *Tarification officielle validée par le serveur lors de la commande.
                   </span>
                 </div>
@@ -632,7 +590,7 @@ export default function CustomerView({
                   <div style={{ marginBottom: '14px' }}>
                     <label
                       htmlFor="selfOrderCustomerName"
-                      style={{ display: 'block', fontWeight: '600', fontSize: '0.82rem', color: '#334155', marginBottom: '6px' }}
+                      style={{ display: 'block', fontWeight: '700', fontSize: '0.83rem', color: '#334155', marginBottom: '6px' }}
                     >
                       Nom du Client / N° de Table *
                     </label>
@@ -644,11 +602,13 @@ export default function CustomerView({
                       onChange={(e) => setCustomerName(e.target.value)}
                       style={{
                         width: '100%',
-                        padding: '10px 12px',
-                        borderRadius: '6px',
+                        padding: '12px 14px',
+                        borderRadius: '8px',
                         border: '1px solid #cbd5e1',
                         fontSize: '0.92rem',
                         boxSizing: 'border-box',
+                        outline: 'none',
+                        transition: 'border-color 0.2s ease',
                       }}
                     />
                   </div>
@@ -656,22 +616,20 @@ export default function CustomerView({
                   <button
                     type="submit"
                     disabled={submittingOrder}
-                    style={{
-                      width: '100%',
-                      backgroundColor: '#2563eb',
-                      color: '#ffffff',
-                      border: 'none',
-                      minHeight: '46px',
-                      padding: '12px',
-                      borderRadius: '8px',
-                      fontWeight: '800',
-                      fontSize: '0.98rem',
-                      cursor: submittingOrder ? 'wait' : 'pointer',
-                      opacity: submittingOrder ? 0.7 : 1,
-                      boxShadow: '0 3px 6px rgba(37, 99, 235, 0.35)',
-                    }}
+                    className="btn-checkout"
                   >
-                    {submittingOrder ? 'Envoi en cuisine...' : `Valider la Commande (${formatPrice(cartSubtotal)})`}
+                    {submittingOrder ? (
+                      <>
+                        <span>⏳</span>
+                        <span>Envoi en cuisine...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Valider la Commande</span>
+                        <span>({formatPrice(cartSubtotal)})</span>
+                        <span>🚀</span>
+                      </>
+                    )}
                   </button>
                 </form>
               </div>
@@ -684,7 +642,7 @@ export default function CustomerView({
       {/* MODE 2: ORDER CONFIRMATION & LIVE REAL-TIME TRACKING     */}
       {/* ======================================================== */}
       {activeTab === 'tracking' && (
-        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
           {/* Lookup Bar */}
           <form
             onSubmit={(e) => {
@@ -706,7 +664,7 @@ export default function CustomerView({
               className="customer-search-btn"
               style={{ opacity: trackingLoading || !trackSearchId.trim() ? 0.7 : 1 }}
             >
-              {trackingLoading ? 'Recherche...' : 'Suivre'}
+              {trackingLoading ? 'Recherche...' : '🔍 Suivre'}
             </button>
           </form>
 
@@ -717,10 +675,11 @@ export default function CustomerView({
                 border: '1px solid #fecaca',
                 color: '#b91c1c',
                 padding: '14px 18px',
-                borderRadius: '8px',
+                borderRadius: '12px',
                 marginBottom: '20px',
-                fontSize: '0.88rem',
+                fontSize: '0.9rem',
                 textAlign: 'center',
+                boxShadow: '0 2px 8px rgba(239, 68, 68, 0.08)',
               }}
             >
               🔍 {trackingError}
@@ -732,20 +691,21 @@ export default function CustomerView({
               style={{
                 backgroundColor: '#ecfdf5',
                 border: '1px solid #a7f3d0',
-                borderRadius: '8px',
-                padding: '14px 18px',
+                borderRadius: '14px',
+                padding: '16px 20px',
                 color: '#065f46',
-                marginBottom: '16px',
+                marginBottom: '20px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
+                gap: '12px',
+                boxShadow: '0 4px 14px rgba(16, 185, 129, 0.12)',
               }}
             >
-              <span style={{ fontSize: '1.4rem' }}>🎉</span>
+              <span style={{ fontSize: '1.8rem' }}>🎉</span>
               <div>
-                <strong>Commande enregistrée avec succès !</strong>
-                <div style={{ fontSize: '0.82rem', marginTop: '2px' }}>
-                  Votre commande a été transmise en direct à la cuisine. Suivez sa progression ci-dessous.
+                <strong style={{ fontSize: '1rem' }}>Commande enregistrée avec succès !</strong>
+                <div style={{ fontSize: '0.84rem', marginTop: '2px', color: '#047857' }}>
+                  Votre commande a été transmise instantanément à la cuisine via WebSocket. Suivez l'évolution en temps réel ci-dessous.
                 </div>
               </div>
             </div>
@@ -755,101 +715,131 @@ export default function CustomerView({
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '12px',
+                borderRadius: '16px',
                 border: '1px solid #e2e8f0',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                boxShadow: '0 8px 30px rgba(15, 23, 42, 0.08)',
                 overflow: 'hidden',
               }}
             >
-              {/* Receipt Header */}
+              {/* Receipt Header Strip */}
               <div
                 style={{
-                  padding: '16px 20px',
-                  backgroundColor: '#f8fafc',
+                  padding: '20px 24px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
                   borderBottom: '1px solid #e2e8f0',
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
                   flexWrap: 'wrap',
-                  gap: '10px',
+                  gap: '12px',
                 }}
               >
                 <div>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700' }}>
-                    Ticket de Commande
-                  </span>
-                  <div style={{ fontSize: '1.3rem', fontWeight: '800', color: '#0f172a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '800' }}>
+                      Ticket de Commande
+                    </span>
+                    <span style={{ fontSize: '0.72rem', background: '#e2e8f0', color: '#475569', padding: '1px 7px', borderRadius: '4px', fontWeight: '700' }}>
+                      OCC v{trackedOrder.version}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.45rem', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em', marginTop: '2px' }}>
                     {trackedOrder.id}
                   </div>
-                  <div style={{ fontSize: '0.92rem', color: '#334155', marginTop: '2px', fontWeight: '600' }}>
-                    Client : {trackedOrder.customer_name}
+                  <div style={{ fontSize: '0.92rem', color: '#334155', marginTop: '3px', fontWeight: '600' }}>
+                    Client : <strong>{trackedOrder.customer_name}</strong>
                   </div>
                 </div>
                 <StatusBadge status={trackedOrder.status} size="large" />
               </div>
 
-              <div style={{ padding: '20px' }}>
+              <div style={{ padding: '24px' }}>
                 {/* Visual Lifecycle Stepper */}
                 <OrderLifecycleStepper currentStatus={trackedOrder.status} />
 
-                {/* Status Message */}
+                {/* Status Announcement Message Banner */}
                 <div
                   style={{
-                    marginTop: '16px',
-                    padding: '14px 16px',
-                    borderRadius: '8px',
+                    marginTop: '20px',
+                    padding: '16px 20px',
+                    borderRadius: '12px',
                     backgroundColor: trackedOrder.status === 'Ready' ? '#ecfdf5' : '#eff6ff',
-                    border: `1px solid ${trackedOrder.status === 'Ready' ? '#a7f3d0' : '#bfdbfe'}`,
+                    border: `1.5px solid ${trackedOrder.status === 'Ready' ? '#6ee7b7' : '#93c5fd'}`,
                     color: trackedOrder.status === 'Ready' ? '#065f46' : '#1e40af',
                     textAlign: 'center',
-                    fontWeight: '600',
-                    fontSize: '0.92rem',
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
                   }}
                 >
                   {STATUS_MESSAGES[trackedOrder.status] || 'Traitement de la commande en cours.'}
                 </div>
 
                 {/* Ordered Items List */}
-                <div style={{ marginTop: '20px' }}>
-                  <h4 style={{ margin: '0 0 10px 0', fontSize: '0.82rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    Articles commandés ({trackedOrder.items.length})
-                  </h4>
-                  <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ marginTop: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.84rem', fontWeight: '800', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Articles Commandés ({trackedOrder.items.length})
+                    </h4>
+                    <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                      Passée à {new Date(trackedOrder.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {trackedOrder.items.map((item, idx) => (
-                      <li
+                      <div
                         key={idx}
                         style={{
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          padding: '10px 14px',
+                          padding: '12px 16px',
                           backgroundColor: '#f8fafc',
-                          borderRadius: '6px',
-                          border: '1px solid #f1f5f9',
-                          fontSize: '0.9rem',
+                          borderRadius: '10px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '0.92rem',
+                          transition: 'background-color 0.15s ease',
                         }}
                       >
-                        <div>
-                          <span style={{ fontWeight: '600', color: '#1e293b' }}>
-                            {item.quantity}x {item.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '26px', height: '26px', borderRadius: '6px', background: '#eff6ff', color: '#2563eb', fontWeight: '800', fontSize: '0.84rem' }}>
+                            {item.quantity}x
                           </span>
-                          {item.unit_price > 0 && (
-                            <span style={{ fontSize: '0.78rem', color: '#64748b', marginLeft: '6px' }}>
-                              (@ {formatPrice(item.unit_price)})
+                          <div>
+                            <span style={{ fontWeight: '700', color: '#1e293b' }}>
+                              {item.name}
                             </span>
-                          )}
+                            {item.unit_price > 0 && (
+                              <span style={{ fontSize: '0.8rem', color: '#64748b', marginLeft: '8px' }}>
+                                ({formatPrice(item.unit_price)})
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                        <span style={{ fontWeight: '800', color: '#0f172a' }}>
                           {formatPrice(item.line_total || item.unit_price * item.quantity)}
                         </span>
-                      </li>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
 
                   {/* Total Display */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '14px', paddingTop: '10px', borderTop: '2px dashed #e2e8f0', fontSize: '1.05rem', fontWeight: '800' }}>
-                    <span>Total :</span>
-                    <span style={{ color: '#059669' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '16px',
+                      padding: '14px 18px',
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                      borderRadius: '12px',
+                      border: '1px solid #cbd5e1',
+                      fontSize: '1.15rem',
+                      fontWeight: '800',
+                    }}
+                  >
+                    <span style={{ color: '#1e293b' }}>Total de la commande :</span>
+                    <span style={{ color: '#059669', fontSize: '1.3rem' }}>
                       {formatPrice(trackedOrder.total_price || 0)}
                     </span>
                   </div>
@@ -858,40 +848,49 @@ export default function CustomerView({
                 {/* Shareable Tracking Link */}
                 <div
                   style={{
-                    marginTop: '20px',
-                    padding: '10px 14px',
-                    backgroundColor: '#f1f5f9',
-                    borderRadius: '8px',
+                    marginTop: '22px',
+                    padding: '14px 16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '12px',
+                    border: '1px solid #e2e8f0',
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '8px',
+                    flexDirection: 'column',
+                    gap: '10px',
                   }}
                 >
-                  <span style={{ fontSize: '0.78rem', color: '#475569', wordBreak: 'break-all' }}>
-                    🔗 <strong>Lien de suivi :</strong> <code>{getTrackingUrl(trackedOrder)}</code>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopyTrackingLink(trackedOrder)}
-                    style={{
-                      backgroundColor: copiedLink ? '#10b981' : '#ffffff',
-                      color: copiedLink ? '#ffffff' : '#1e293b',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: '6px',
-                      padding: '6px 12px',
-                      fontSize: '0.78rem',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {copiedLink ? '✓ Copié !' : 'Copier le lien'}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#334155' }}>
+                      🔗 Lien de suivi direct :
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyTrackingLink(trackedOrder)}
+                      style={{
+                        backgroundColor: copiedLink ? '#10b981' : '#ffffff',
+                        color: copiedLink ? '#ffffff' : '#1e293b',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        padding: '6px 14px',
+                        fontSize: '0.82rem',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <span>{copiedLink ? '✓' : '📋'}</span>
+                      <span>{copiedLink ? 'Lien copié !' : 'Copier le lien'}</span>
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#64748b', wordBreak: 'break-all', background: '#ffffff', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontFamily: 'monospace' }}>
+                    {getTrackingUrl(trackedOrder)}
+                  </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                   <button
                     type="button"
                     onClick={() => setActiveTab('menu')}
@@ -899,18 +898,19 @@ export default function CustomerView({
                       background: 'none',
                       border: 'none',
                       color: '#2563eb',
-                      fontWeight: '700',
-                      fontSize: '0.88rem',
+                      fontWeight: '800',
+                      fontSize: '0.92rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
+                      gap: '6px',
+                      padding: '6px 0',
                     }}
                   >
-                    ← Retour au Menu / Commander
+                    ← Retourner à la Carte pour commander
                   </button>
-                  <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                    Version OCC : v{trackedOrder.version}
+                  <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                    Mise à jour automatique par WebSocket
                   </span>
                 </div>
               </div>
@@ -921,35 +921,37 @@ export default function CustomerView({
             <div
               style={{
                 backgroundColor: '#ffffff',
-                borderRadius: '10px',
-                border: '1px dashed #cbd5e1',
-                padding: '40px 20px',
+                borderRadius: '16px',
+                border: '2px dashed #cbd5e1',
+                padding: '48px 24px',
                 textAlign: 'center',
                 color: '#64748b',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.03)',
               }}
             >
-              <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>🔎</div>
-              <h3 style={{ margin: '0 0 6px 0', color: '#1e293b', fontSize: '1.05rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔎</div>
+              <h3 style={{ margin: '0 0 8px 0', color: '#0f172a', fontSize: '1.2rem', fontWeight: '800' }}>
                 Aucune commande sélectionnée
               </h3>
-              <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem' }}>
-                Saisissez votre numéro de commande ci-dessus ou parcourez le menu pour commander.
+              <p style={{ margin: '0 0 20px 0', fontSize: '0.9rem', color: '#64748b', maxWidth: '380px', marginInline: 'auto' }}>
+                Entrez votre identifiant de commande ci-dessus pour suivre son état en cuisine, ou parcourez notre carte gastronomique.
               </p>
               <button
                 type="button"
                 onClick={() => setActiveTab('menu')}
                 style={{
-                  backgroundColor: '#2563eb',
+                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  fontWeight: '700',
-                  fontSize: '0.88rem',
+                  padding: '10px 22px',
+                  borderRadius: '10px',
+                  fontWeight: '800',
+                  fontSize: '0.92rem',
                   cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)',
                 }}
               >
-                Parcourir le Menu
+                📖 Parcourir la Carte des Menus
               </button>
             </div>
           )}
