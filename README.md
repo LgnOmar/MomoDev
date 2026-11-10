@@ -1,216 +1,275 @@
-# Real-Time Restaurant Order Management & Customer Self-Service System
+<div align="center">
 
-A lightweight, robust, real-time restaurant order management application demonstrating shared state synchronization between multiple roles: **Customer** (Self-Service Ordering & Live Tracking), **Cashier** (Walk-in Orders & Menu Availability), and **Kitchen** (Kitchen Display System).
+# 🍽️ Real-Time Restaurant Order Management & Customer Self-Service System
 
-The application uses **FastAPI** with Python's built-in **SQLite** (`sqlite3`) as the authoritative source of truth, **WebSockets** for instant bi-directional event broadcasts, and **React + Vite** for a responsive, reactive frontend across mobile, tablet, and desktop devices.
+**An event-driven restaurant management application featuring authoritative state synchronization, customer self-service ordering, and optimistic concurrency control across distributed role interfaces.**
 
----
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18+-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5+-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![SQLite](https://img.shields.io/badge/SQLite-WAL_Mode-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![WebSockets](https://img.shields.io/badge/WebSockets-Real--Time-010101?style=for-the-badge&logo=socketdotio&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)
+[![Tests](https://img.shields.io/badge/Tests-18%20Passed-success?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org/)
 
-## 1. System Architecture
+[Key Features](#-key-features) • [System Architecture](#-system-architecture) • [Real-Time Flow](#-real-time-synchronization-flow) • [Menu Hierarchy](#-restaurant-menu-hierarchy) • [Concurrency Control](#-concurrency-control--occ) • [Quick Start](#-getting-started) • [API Reference](#-api-reference)
 
-```text
-┌─────────────────────────┐       ┌─────────────────────────┐       ┌─────────────────────────┐
-│     Customer View       │       │      Kitchen View       │       │      Cashier View       │
-│  - Browse Menu          │       │  - Live Ticket Queue    │       │  - Walk-in Orders       │
-│  - Self-Service Cart    │       │  - Advance State (OCC)  │       │  - Toggle Availability │
-│  - Live Order Tracking  │       │  - Auto-syncs via WS    │       │  - Generate Links       │
-└────────────┬────────────┘       └────────────┬────────────┘       └────────────┬────────────┘
-             │                                 │                                 │
-             │ REST (GET/POST)                 │ REST (PATCH)                    │ REST (POST/PATCH)
-             │                                 │                                 │
-             ▼                                 ▼                                 ▼
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│                                   FastAPI Backend Service                                   │
-│  - REST API validation, menu routes, & order creation                                       │
-│  - Authoritative server-side price calculation (never trusts client totals)                 │
-│  - Optimistic Concurrency Control (OCC) with atomic version verification                    │
-│  - Transactional commits to SQLite                                                          │
-│  - In-memory WebSocket Connection Manager                                                   │
-└──────────────────────────────┬──────────────────────────────────────▲───────────────────────┘
-                               │ Writes & Reads                       │ Broadcasts events
-                               ▼                                      │ (post-commit only)
-┌──────────────────────────────────────────────┐                      │
-│           SQLite Persistent Store            │                      │
-│  - Authoritative orders, categories, items   │──────────────────────┘
-│  - Historical item price & name snapshots    │  ws://localhost:8000/ws
-│  - Atomic version increments (WAL mode)      │
-└──────────────────────────────────────────────┘
-```
-
-### Key Architectural Principles
-- **Authoritative Database & Server Calculations**: SQLite is the single source of truth. The frontend sends menu item IDs and quantities; the backend retrieves current prices from SQLite, validates availability, and calculates the authoritative total.
-- **Historical Order Snapshots**: When an order is placed, an immutable snapshot of item names, unit prices, quantities, and line totals is saved. Future menu price edits never alter historical receipts.
-- **Post-Commit Broadcasting**: WebSocket events (`order_created`, `order_updated`, `menu_item_updated`) are broadcast **only after** database transactions have committed.
-- **Sound Simplicity**: Single-process architecture using standard Python `sqlite3` and FastAPI WebSocket manager. No heavy message brokers or ORMs are required.
-- **Graceful Reconnection**: When reconnecting, the frontend re-fetches orders and menu data from the REST API to recover any state changes missed during a network interruption.
+</div>
 
 ---
 
-## 2. Project Structure
+## 🌟 Key Features
 
-```text
-restaurant-order-sync/
-├── frontend/                         # Vite + React Client
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── ConflictBanner.jsx    # Displays concurrency conflict warnings
-│   │   │   ├── Header.jsx            # Role navigation bar & live WS indicator
-│   │   │   ├── OrderLifecycleStepper.jsx # Visual 4-stage progression bar
-│   │   │   └── StatusBadge.jsx       # Distinct color-coded status badges
-│   │   ├── pages/
-│   │   │   ├── CashierView.jsx       # Walk-in orders & Menu Availability Manager
-│   │   │   ├── KitchenView.jsx       # Active ticket queue & advance actions
-│   │   │   └── CustomerView.jsx      # Menu browsing, self-service cart, live tracking
-│   │   ├── services/
-│   │   │   ├── api.js                # REST API client with OCC conflict handling
-│   │   │   └── websocket.js          # Auto-reconnecting WebSocket client
-│   │   ├── App.css                   # Responsive layout & utility classes
-│   │   ├── App.jsx                   # Role routing & global state sync
-│   │   ├── index.css                 # Clean CSS reset & responsive styling
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js                # Proxies /api and /ws to backend
-│
-├── backend/                          # FastAPI + SQLite Service
-│   ├── app/
-│   │   ├── database.py               # SQLite connection pool, schema, WAL mode, migrations
-│   │   ├── menu_seed.py              # Illustrative demonstration menu data
-│   │   ├── models.py                 # Pydantic schemas, validation, transitions
-│   │   ├── main.py                   # FastAPI app, CORS, lifespan, /ws endpoint
-│   │   ├── routes/
-│   │   │   ├── menu.py               # Menu browsing & availability endpoints
-│   │   │   └── orders.py             # Order creation & OCC status endpoints
-│   │   └── services/
-│   │       └── websocket_manager.py  # Thread/async-safe WebSocket broadcaster
-│   ├── tests/
-│   │   ├── conftest.py               # Isolated SQLite test fixture
-│   │   ├── test_menu_and_ordering.py # Menu hierarchy, cart & price validation tests
-│   │   ├── test_orders.py            # Lifecycle, OCC concurrency, & validation tests
-│   │   └── e2e_simulation.py         # Multi-client live concurrency test
-│   ├── pytest.ini
-│   └── requirements.txt
-│
-├── README.md
-├── DEMO_GUIDE.md
-└── .gitignore
+The application provides three specialized web interfaces sharing one authoritative SQLite datastore and an in-memory WebSocket event bus:
+
+| Interface | Primary Users | Key Capabilities |
+| :--- | :--- | :--- |
+| **📱 Customer View** | Guests & Walk-ins | Browse 3 meal periods (20 strict categories), interactive shopping cart, server-validated orders in Algerian Dinars (`DA`), and live 4-stage tracking stepper with real-time updates. |
+| **🍳 Kitchen Display (KDS)** | Kitchen Staff & Chefs | Live active ticket queue, 1-click lifecycle advancement (`New → Preparing → Ready → Served`), optimistic concurrency conflict detection, and immediate broadcast on prep completion. |
+| **💳 Cashier Terminal** | Front Counter & Cashiers | Walk-in manual ticket entry, shareable tracking link generator, order queue review, and live menu stock toggling (`In Stock` ↔ `Out of Stock`). |
+
+### Engineering Highlights
+- **Authoritative Server Calculations**: Client-submitted totals are never trusted. The backend verifies item availability and calculates line totals and grand totals authoritatively in **Algerian Dinars (DA)**.
+- **Historical Order Snapshots**: When an order is placed, an immutable snapshot of item names, unit prices, quantities, and line totals is saved. Future menu updates never alter past receipts.
+- **Transactional Post-Commit Broadcasting**: WebSockets only broadcast events after the SQLite transaction has committed to disk.
+- **Optimistic Concurrency Control (OCC)**: Atomic conditional SQL updates eliminate race conditions when multiple staff members advance tickets simultaneously.
+- **Full Multi-Device Responsiveness**: Fluid layouts engineered for smartphones (320px–480px), tablets (768px–1024px), laptops, and large desktop screens.
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Clients["Frontend Clients (React + Vite)"]
+        CV["Customer Self-Service Interface (Cart, Menu & Live Stepper)"]
+        KV["Kitchen Display System (Ticket Queue & Status Actions)"]
+        CT["Cashier Terminal (Walk-in Orders & Stock Management)"]
+    end
+
+    subgraph Backend["FastAPI Backend Service"]
+        ROUTER["REST API Routes (/api/orders, /api/menu)"]
+        WS_MGR["WebSocket Manager (In-Memory Broadcast Hub)"]
+        VAL["Validation & OCC Engine (Price Auth, State Machine)"]
+    end
+
+    subgraph Storage["Persistent Store (Authoritative)"]
+        DB[("SQLite 3 Engine (WAL Mode, Immediate Transactions)")]
+        T_ORDERS[("orders table (JSON Snapshot, Version, Status)")]
+        T_MENU[("menu_categories & menu_items (3 Meal Periods, 20 Categories)")]
+    end
+
+    CV -->|"POST /api/orders (Submit Cart)"| ROUTER
+    KV -->|"PATCH /api/orders/{id}/status (Advance Status)"| ROUTER
+    CT -->|"PATCH /api/menu/items/{id}/availability (Toggle Stock)"| ROUTER
+    CV -.->|"GET /api/menu"| ROUTER
+
+    ROUTER --> VAL
+    VAL -->|"ACID Transaction"| DB
+    DB --- T_ORDERS
+    DB --- T_MENU
+
+    DB -->|"Commit Success Trigger"| WS_MGR
+    WS_MGR -.->|"ws:// broadcast: order_created"| CV & KV & CT
+    WS_MGR -.->|"ws:// broadcast: order_updated"| CV & KV & CT
+    WS_MGR -.->|"ws:// broadcast: menu_item_updated"| CV & CT
 ```
 
 ---
 
-## 3. Restaurant Menu Hierarchy
+## ⚡ Real-Time Synchronization Flow
 
-The menu strictly follows the 3 meal periods and their exact 20 categories in order, featuring dishes inspired by French and Algerian culinary traditions (e.g., Couscous Royal, Chakhchoukha de Biskra, Chorba Frik, Tajine Zitoun, Bourek, Chakchouka, Msemen, Thé à la Menthe) with authentic prices formatted in **Algerian Dinars (DA)**:
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Customer View
+    participant Backend as FastAPI Backend
+    participant DB as SQLite Store
+    actor Kitchen as Kitchen Display
+    actor Cashier as Cashier View
 
-### 1. Breakfast
-1. Beverages / Liquid Start
-2. Fruit & Bakery
-3. Cereals & Grains
-4. Main Plates
+    Note over Customer, Backend: 1. Customer Submits Self-Service Order
+    Customer->>Backend: POST /api/orders { customer_name, items: [{id, qty}] }
+    Backend->>DB: Query current prices & verify is_available = 1
+    Backend->>DB: INSERT INTO orders (total_price in DA, version=1, status='New')
+    DB-->>Backend: Transaction Committed
+    Backend-->>Customer: 201 Created { id: "ORD-1001", total_price: 1450.0, version: 1 }
 
-### 2. Lunch
-1. Appetizer / Starter
-2. Main Course
-3. Sides
-4. Dessert
+    par Real-Time Broadcast (Post-Commit)
+        Backend-->>Customer: WS: order_created (Transitions to Live Stepper)
+        Backend-->>Kitchen: WS: order_created (New ticket appears in queue)
+        Backend-->>Cashier: WS: order_created (Ticket logged in queue)
+    end
 
-### 3. Dinner & Full-Course Meal
-1. Hors d’œuvre
-2. Amuse-bouche
-3. Soup
-4. Appetizer / Starter
-5. Salad
-6. Fish / Seafood Course
-7. Palate Cleanser
-8. Main Course
-9. Cheese Course
-10. Dessert
-11. Mignardises / Petit Fours
-12. Digestif & Beverages
+    Note over Kitchen, Backend: 2. Kitchen Advances Ticket
+    Kitchen->>Backend: PATCH /api/orders/ORD-1001/status { status: 'Preparing', version: 1 }
+    Backend->>DB: UPDATE orders SET status='Preparing', version=2 WHERE id='ORD-1001' AND version=1
+    DB-->>Backend: 1 row affected (Version incremented)
+    Backend-->>Kitchen: 200 OK
 
-Each category contains sample illustrative dishes with unique IDs, names, descriptions, prices, and availability status.
-
----
-
-## 4. Order Lifecycle & Concurrency Strategy
-
-### Lifecycle
-$$\text{New} \longrightarrow \text{Preparing} \longrightarrow \text{Ready} \longrightarrow \text{Served}$$
-
-- Skipped transitions (e.g. `New → Ready`) and backwards transitions are rejected with HTTP 400.
-
-### Optimistic Concurrency Control (OCC)
-- Orders start at `version = 1`.
-- When updating status, clients submit `{ "status": nextStatus, "version": knownVersion }`.
-- Backend verifies version matches database.
-- Updates execute via atomic conditional SQL:
-  ```sql
-  UPDATE orders
-  SET status = ?, version = version + 1
-  WHERE id = ? AND version = ?
-  ```
-- If a stale version is received or another user updated first, the request is rejected with **HTTP 409 Conflict** and returns the latest order state.
+    par Real-Time Status Broadcast
+        Backend-->>Customer: WS: order_updated (Stepper moves to Preparing)
+        Backend-->>Kitchen: WS: order_updated
+        Backend-->>Cashier: WS: order_updated
+    end
+```
 
 ---
 
-## 5. API Reference
+## 🔄 Order Lifecycle & Concurrency (OCC)
+
+```mermaid
+stateDiagram-v2
+    [*] --> New: Customer self-orders or Cashier creates ticket (v1)
+
+    New --> Preparing: Kitchen clicks "Démarrer la préparation" (v1 -> v2)
+    Preparing --> Ready: Kitchen clicks "Marquer Prêt" (v2 -> v3)
+    Ready --> Served: Kitchen clicks "Marquer Servi" (v3 -> v4)
+    Served --> [*]: Ticket Completed
+
+    note right of New
+        Ticket queued in kitchen.
+        Tracking link active for guest.
+    end note
+
+    note right of Preparing
+        Food being cooked / plated.
+        Customer receives live update.
+    end note
+
+    note right of Ready
+        Food at pickup counter.
+        Visual pickup chime alert.
+    end note
+
+    note right of Served
+        Delivered to customer.
+        Archived from active queue.
+    end note
+```
+
+### Optimistic Concurrency Control
+To prevent race conditions when multiple users manipulate tickets simultaneously:
+1. Every order carries an incremental integer `version` (initialized to `1`).
+2. Update requests submit the known version: `{ "status": "Ready", "version": 2 }`.
+3. The backend executes an atomic conditional SQL statement:
+   ```sql
+   UPDATE orders
+   SET status = ?, version = version + 1
+   WHERE id = ? AND version = ?;
+   ```
+4. If another staff member updated the order first, `rowcount` equals `0`. The backend rejects the stale request with **HTTP 409 Conflict** and returns the latest order state so the client reconciles without data loss.
+
+---
+
+## 📋 Restaurant Menu Hierarchy
+
+The demonstration menu adheres to 3 meal periods and their exact 20 canonical categories, featuring French and Algerian culinary dishes with prices in **Algerian Dinars (DA)**:
+
+| Meal Period | Category Order | Canonical Category Name | Sample Demonstrative Dishes (DA) |
+| :--- | :---: | :--- | :--- |
+| **🌅 Breakfast** | 1 | `Beverages / Liquid Start` | Jus d'Orange Pressé (350 DA), Café Crème Kahwa (250 DA) |
+| | 2 | `Fruit & Bakery` | Msemen Beurre & Miel (400 DA), Croissant Artisanal (350 DA) |
+| | 3 | `Cereals & Grains` | Tamina Dorée aux Amandes (500 DA), Gruau Dattes Deglet Nour (450 DA) |
+| | 4 | `Main Plates` | Chakchouka Traditionnelle aux Œufs (750 DA), Omelette Khlii (850 DA) |
+| **🥗 Lunch** | 1 | `Appetizer / Starter` | Bourek Viande Hachée (650 DA), Salade Méchouia Braisée (600 DA) |
+| | 2 | `Main Course` | Couscous Royal Agneau (1 950 DA), Tajine Zitoun Poulet (1 650 DA) |
+| | 3 | `Sides` | Frites Maison aux Épices (400 DA), Batata Chtitha (450 DA) |
+| | 4 | `Dessert` | Crème Caramel Fleur d'Oranger (500 DA), Fondant Chocolat Noir (650 DA) |
+| **🍷 Dinner & Full-Course** | 1 | `Hors d’œuvre` | Mini Pastillas Poulet & Amandes (850 DA), Feuillantine Crevettes (900 DA) |
+| | 2 | `Amuse-bouche` | Velouté Glacé Courgettes Menthe (450 DA), Canapé Sardines (500 DA) |
+| | 3 | `Soup` | Chorba Frik Agneau (850 DA), Chorba Beida Blanche Poulet (800 DA) |
+| | 4 | `Appetizer / Starter` | Foie Gras Poêlé aux Figues (1 800 DA), Tartare de Thon Rouge (1 500 DA) |
+| | 5 | `Salad` | Salade Agrumes & Roquette (750 DA), Salade Tomates & Olives (700 DA) |
+| | 6 | `Fish / Seafood Course` | Pavé de Loup de Mer au Fenouil (2 400 DA), Gambas Royales (2 600 DA) |
+| | 7 | `Palate Cleanser` | Sorbet Givré Citron & Menthe (400 DA), Granité Clémentine (450 DA) |
+| | 8 | `Main Course` | Chakhchoukha de Biskra Agneau (2 200 DA), Souris d'Agneau Confite (2 500 DA) |
+| | 9 | `Cheese Course` | Sélection Brebis & Chèvre (1 100 DA), Fromage Frais Zaatar (950 DA) |
+| | 10 | `Dessert` | Mille-Feuille Vanille Praliné (850 DA), Tartelette Fraises Pistache (800 DA) |
+| | 11 | `Mignardises / Petit Fours`| Trio Pâtisseries Baklawa/Samsa (650 DA), Truffes Chocolat (550 DA) |
+| | 12 | `Digestif & Beverages` | Thé à la Menthe aux Pignons (350 DA), Infusion Verveine (300 DA) |
+
+---
+
+## 📱 Responsive Multi-Device Design
+
+The application is responsive across different device viewports:
+
+| Device | Breakpoint | Responsive Behaviors |
+| :--- | :--- | :--- |
+| **Mobile** | `< 480px` | Single-column stacked tickets, full-width touch targets (minimum 44px), horizontally swipeable meal-period tabs, and sticky cart action bar. |
+| **Tablet** | `768px – 1024px` | Dual-column KDS grid, fluid 2-column cashier layout, and optimized typography for touchscreens. |
+| **Desktop** | `> 1024px` | Side-by-side cashier orders queue and walk-in form; sticky shopping cart panel pinned alongside category items; multi-column kitchen ticket grid. |
+
+---
+
+## 🔌 API Reference
 
 ### Menu Endpoints
-- `GET /api/menu`: Returns structured menu with categories and items grouped by meal period.
+- `GET /api/menu`: Returns structured 3-period menu with 20 ordered categories and items.
 - `GET /api/menu/items`: Returns flat list of all menu items.
 - `PATCH /api/menu/items/{id}/availability`: Toggles item availability and broadcasts `menu_item_updated`.
 
 ### Order Endpoints
-- `GET /api/orders`: Retrieves all orders.
-- `GET /api/orders/{id}`: Retrieves single order by ID or numeric code.
-- `POST /api/orders`: Creates order from menu items or walk-in items; calculates authoritative prices server-side; broadcasts `order_created`.
-- `PATCH /api/orders/{id}/status`: Advances status using OCC; broadcasts `order_updated`.
-- `WS /ws`: Bi-directional real-time connection.
+- `GET /api/orders`: Retrieves all orders sorted by creation time descending.
+- `GET /api/orders/{id}`: Retrieves single order by alphanumeric ID (e.g. `ORD-1001`).
+- `POST /api/orders`: Creates self-service or walk-in order; validates items, availability, and calculates prices authoritatively in `DA`; broadcasts `order_created`.
+- `PATCH /api/orders/{id}/status`: Advances status using OCC version check; broadcasts `order_updated`.
+- `WS /ws`: Bi-directional real-time WebSocket connection.
 
 ---
 
-## 6. Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.10+
-- Node.js 18+ and npm
+- **Python 3.10+**
+- **Node.js 18+** and **npm**
 
-### Installation & Launch (PowerShell)
-
-#### 1. Backend Service
+### 1. Backend Service Setup (PowerShell)
 ```powershell
 cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+
+# Start FastAPI server on port 8000
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
-API is live at `http://127.0.0.1:8000` (docs at `http://127.0.0.1:8000/docs`).
+- API endpoints: `http://127.0.0.1:8000`
+- Interactive Swagger docs: `http://127.0.0.1:8000/docs`
 
-#### 2. Frontend Application
+### 2. Frontend Application Setup (PowerShell)
 ```powershell
 cd frontend
 npm install
+
+# Start Vite development server
 npm run dev
 ```
-Client is live at `http://localhost:5173`.
+- Web Application: `http://localhost:5173`
 
 ---
 
-## 7. Role URLs
+## 🌐 Role Direct URLs
 
-- **Customer View (Menu & Self-Order)**: [http://localhost:5173/?role=customer](http://localhost:5173/?role=customer)
-- **Customer Tracker**: [http://localhost:5173/?role=customer&orderId=ORD-1001](http://localhost:5173/?role=customer&orderId=ORD-1001)
-- **Kitchen Display System**: [http://localhost:5173/?role=kitchen](http://localhost:5173/?role=kitchen)
-- **Cashier Terminal**: [http://localhost:5173/?role=cashier](http://localhost:5173/?role=cashier)
+| Role | Direct URL | Description |
+| :--- | :--- | :--- |
+| **Customer (Self-Order)** | [http://localhost:5173/?role=customer](http://localhost:5173/?role=customer) | Default view: Browse French/Algerian menu, build cart, place order. |
+| **Customer Tracking** | [http://localhost:5173/?role=customer&orderId=ORD-1001](http://localhost:5173/?role=customer&orderId=ORD-1001) | Live 4-stage tracking stepper for order `ORD-1001`. |
+| **Kitchen Display (KDS)** | [http://localhost:5173/?role=kitchen](http://localhost:5173/?role=kitchen) | Active ticket queue with one-click status advancement. |
+| **Cashier Terminal** | [http://localhost:5173/?role=cashier](http://localhost:5173/?role=cashier) | Walk-in order creation and live menu stock toggling. |
 
 ---
 
-## 8. Running the Tests
+## 🧪 Verification & Testing
 
 ```powershell
-# Run full backend test suite (18 tests)
+# Run the complete test suite (18 unit & integration tests)
 backend\.venv\Scripts\pytest backend\tests -v
 
-# Run live multi-client end-to-end WebSocket & concurrency simulation
+# Run the live multi-client end-to-end WebSocket & OCC simulation
 backend\.venv\Scripts\python backend\tests\e2e_simulation.py
+
+# Verify production frontend build
+cd frontend; npm run build
 ```
