@@ -219,48 +219,39 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                   {/* Lifecycle Stepper */}
                   <OrderLifecycleStepper currentStatus={ord.status} />
 
-                  {/* Ordered Items */}
+                  {/* Ordered Items Structured Table */}
                   <div style={{ marginTop: '10px', flex: 1 }}>
                     <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Items to Prepare:
+                      Détails de la Commande :
                     </span>
-                    <ul
-                      style={{
-                        margin: '8px 0 0 0',
-                        padding: 0,
-                        listStyle: 'none',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                      }}
-                    >
-                      {ord.items.map((item, idx) => (
-                        <li
-                          key={idx}
-                          style={{
-                            padding: '8px 12px',
-                            background: '#f8fafc',
-                            borderRadius: '6px',
-                            border: '1px solid #e2e8f0',
-                            fontSize: '0.88rem',
-                            fontWeight: '500',
-                            color: '#1e293b',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <span>
-                            🍴 <strong>{item.quantity ? `${item.quantity}x ` : ''}</strong>{item.name || item}
-                          </span>
-                          {item.line_total > 0 && (
-                            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>
-                              {formatPrice(item.line_total)}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '8px', fontSize: '0.84rem' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid #cbd5e1', color: '#64748b', textAlign: 'left' }}>
+                          <th style={{ padding: '4px 6px' }}>Plat</th>
+                          <th style={{ padding: '4px 6px', textAlign: 'center' }}>Qté</th>
+                          <th style={{ padding: '4px 6px', textAlign: 'right' }}>Prix U.</th>
+                          <th style={{ padding: '4px 6px', textAlign: 'right' }}>Sous-total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ord.items.map((item, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '6px', fontWeight: '600', color: '#1e293b' }}>
+                              {item.name || item}
+                            </td>
+                            <td style={{ padding: '6px', textAlign: 'center', fontWeight: '700', color: '#2563eb' }}>
+                              {item.quantity || 1}
+                            </td>
+                            <td style={{ padding: '6px', textAlign: 'right', color: '#64748b' }}>
+                              {item.unit_price > 0 ? formatPrice(item.unit_price) : '-'}
+                            </td>
+                            <td style={{ padding: '6px', textAlign: 'right', fontWeight: '700', color: '#0f172a' }}>
+                              {item.line_total > 0 ? formatPrice(item.line_total) : '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
 
                     {ord.total_price > 0 && (
                       <div
@@ -270,8 +261,8 @@ export default function KitchenView({ orders, onOrderUpdated }) {
                           alignItems: 'center',
                           marginTop: '10px',
                           paddingTop: '8px',
-                          borderTop: '1px dashed #cbd5e1',
-                          fontSize: '0.92rem',
+                          borderTop: '2px solid #e2e8f0',
+                          fontSize: '0.95rem',
                           fontWeight: '800',
                           color: '#0f172a',
                         }}

@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, HTTPException, status
@@ -38,12 +39,12 @@ def get_orders():
 
 @router.get("/{order_id}", response_model=OrderResponse)
 def get_order(order_id: str):
-    """Retrieve a single order by ID."""
+    """Retrieve a single order by ID or secure tracking token."""
     clean_id = order_id.strip()
     with get_db() as conn:
         cursor = conn.execute(
-            "SELECT * FROM orders WHERE id = ? OR id = ?",
-            (clean_id, f"ORD-{clean_id}")
+            "SELECT * FROM orders WHERE id = ? OR id = ? OR tracking_token = ?",
+            (clean_id, f"ORD-{clean_id}", clean_id)
         )
         row = cursor.fetchone()
         if not row:
@@ -60,17 +61,27 @@ async def create_order(payload: OrderCreate):
     Supports both:
     1. Customer self-service ordering with menu item IDs & server-calculated prices.
     2. Cashier walk-in ordering with custom item strings.
-    Validates item existence, positive quantities, and availability server-side.
+    Validates item existence, positive quantities, availability, and idempotency.
     Broadcasts 'order_created' after successful database commit.
     """
     created_at = datetime.now(timezone.utc).isoformat()
     initial_status = OrderStatus.NEW.value
     initial_version = 1
+    tracking_token = f"trk_{uuid.uuid4().hex[:12]}"
 
     snapshots = []
     total_price = 0.0
 
     with get_db() as conn:
+        # Check idempotency to prevent duplicate orders on retry or double-click
+        if payload.idempotency_key:
+            existing = conn.execute(
+                "SELECT * FROM orders WHERE idempotency_key = ?",
+                (payload.idempotency_key,)
+            ).fetchone()
+            if existing:
+                return row_to_dict(existing)
+
         # Check if items are structured menu item inputs or plain strings
         first_item = payload.items[0] if payload.items else None
 
@@ -142,10 +153,10 @@ async def create_order(payload: OrderCreate):
             order_id = _generate_next_order_id(conn)
             conn.execute(
                 """
-                INSERT INTO orders (id, customer_name, items, status, created_at, version, total_price)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO orders (id, customer_name, items, status, created_at, version, total_price, tracking_token, idempotency_key)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (order_id, payload.customer_name, items_json, initial_status, created_at, initial_version, total_price)
+                (order_id, payload.customer_name, items_json, initial_status, created_at, initial_version, total_price, tracking_token, payload.idempotency_key)
             )
             cursor = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,))
             created_order = row_to_dict(cursor.fetchone())

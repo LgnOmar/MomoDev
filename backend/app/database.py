@@ -1,15 +1,21 @@
 import sqlite3
 import json
 import os
+import uuid
 from datetime import datetime, timezone
 from contextlib import contextmanager
 from app.menu_seed import SEED_MENU
 
-DB_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(DB_DIR, "restaurant_orders.db")
+DEFAULT_DB_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DB_PATH = os.path.join(DEFAULT_DB_DIR, "restaurant_orders.db")
+DB_PATH = DEFAULT_DB_PATH
+
+def get_db_path() -> str:
+    """Dynamically resolve the active database path, respecting test overrides."""
+    return os.environ.get("RESTAURANT_DB_PATH") or DB_PATH
 
 def get_connection(db_path: str = None) -> sqlite3.Connection:
-    actual_path = db_path or DB_PATH
+    actual_path = db_path or get_db_path()
     conn = sqlite3.connect(actual_path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode = WAL;")
@@ -18,7 +24,7 @@ def get_connection(db_path: str = None) -> sqlite3.Connection:
 
 @contextmanager
 def get_db(db_path: str = None):
-    actual_path = db_path or DB_PATH
+    actual_path = db_path or get_db_path()
     conn = get_connection(actual_path)
     try:
         yield conn
@@ -26,7 +32,7 @@ def get_db(db_path: str = None):
         conn.close()
 
 def init_db(db_path: str = None) -> None:
-    actual_path = db_path or DB_PATH
+    actual_path = db_path or get_db_path()
     with get_db(actual_path) as conn:
         with conn:
             # 1. Orders table
@@ -37,18 +43,32 @@ def init_db(db_path: str = None) -> None:
                     items TEXT NOT NULL,
                     status TEXT NOT NULL,
                     created_at TEXT NOT NULL,
-                    version INTEGER NOT NULL DEFAULT 1
+                    version INTEGER NOT NULL DEFAULT 1,
+                    total_price REAL NOT NULL DEFAULT 0.0,
+                    tracking_token TEXT,
+                    idempotency_key TEXT
                 );
             """)
             conn.execute("""
                 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
             """)
 
-            # Safe additive migration: ensure total_price exists on orders
+            # Safe additive migrations for existing databases
             cursor = conn.execute("PRAGMA table_info(orders);")
             columns = [col["name"] for col in cursor.fetchall()]
             if "total_price" not in columns:
                 conn.execute("ALTER TABLE orders ADD COLUMN total_price REAL NOT NULL DEFAULT 0.0;")
+            if "tracking_token" not in columns:
+                conn.execute("ALTER TABLE orders ADD COLUMN tracking_token TEXT;")
+            if "idempotency_key" not in columns:
+                conn.execute("ALTER TABLE orders ADD COLUMN idempotency_key TEXT;")
+
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_orders_tracking ON orders(tracking_token);
+            """)
+            conn.execute("""
+                CREATE INDEX IF NOT EXISTS idx_orders_idempotency ON orders(idempotency_key);
+            """)
 
             # 2. Menu categories table
             conn.execute("""
@@ -140,5 +160,11 @@ def row_to_dict(row: sqlite3.Row) -> dict:
 
     if "total_price" in d:
         d["total_price"] = float(d["total_price"] or 0.0)
+
+    if "tracking_token" not in d or not d["tracking_token"]:
+        d["tracking_token"] = None
+
+    if "idempotency_key" not in d or not d["idempotency_key"]:
+        d["idempotency_key"] = None
 
     return d

@@ -17,16 +17,24 @@ def test_db():
     temp_dir = tempfile.mkdtemp()
     test_db_path = os.path.join(temp_dir, "test_restaurant.db")
     
-    # Override database path
+    # Override database path via environment variable and module attribute
+    original_env = os.environ.get("RESTAURANT_DB_PATH")
     original_path = database.DB_PATH
+    
+    os.environ["RESTAURANT_DB_PATH"] = test_db_path
     database.DB_PATH = test_db_path
     
     init_db(test_db_path)
     
     yield test_db_path
     
-    # Restore and cleanup
+    # Restore environment and cleanup
+    if original_env is not None:
+        os.environ["RESTAURANT_DB_PATH"] = original_env
+    else:
+        os.environ.pop("RESTAURANT_DB_PATH", None)
     database.DB_PATH = original_path
+    
     try:
         if os.path.exists(test_db_path):
             os.remove(test_db_path)

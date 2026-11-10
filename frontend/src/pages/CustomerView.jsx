@@ -183,12 +183,14 @@ export default function CustomerView({
 
     setSubmittingOrder(true);
     try {
+      const idempotencyKey = `idemp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
       const orderPayload = {
         customer_name: trimmedName,
         items: cart.map((ci) => ({
           menu_item_id: ci.id,
           quantity: ci.quantity,
         })),
+        idempotency_key: idempotencyKey,
       };
 
       const createdOrder = await createOrder(orderPayload);
@@ -210,12 +212,15 @@ export default function CustomerView({
     }
   };
 
-  const getTrackingUrl = (orderId) => {
-    return `${window.location.origin}/?role=customer&orderId=${encodeURIComponent(orderId)}`;
+  const getTrackingUrl = (order) => {
+    const identifier = typeof order === 'object' && order !== null
+      ? (order.tracking_token || order.id)
+      : order;
+    return `${window.location.origin}/?role=customer&orderId=${encodeURIComponent(identifier)}`;
   };
 
-  const handleCopyTrackingLink = (orderId) => {
-    navigator.clipboard.writeText(getTrackingUrl(orderId)).then(() => {
+  const handleCopyTrackingLink = (order) => {
+    navigator.clipboard.writeText(getTrackingUrl(order)).then(() => {
       setCopiedLink(true);
       setTimeout(() => setCopiedLink(false), 2500);
     });
@@ -345,6 +350,12 @@ export default function CustomerView({
                 );
               })}
             </div>
+
+            {selectedMealPeriod === 'Dinner & Full-Course Meal' && (
+              <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '10px 14px', marginBottom: '18px', fontSize: '0.82rem', color: '#475569' }}>
+                💡 <strong>Menu gastronomique à la carte :</strong> Vous pouvez librement composer votre repas selon vos envies parmi les 12 étapes proposées ci-dessous (la sélection de chaque étape est entièrement optionnelle).
+              </div>
+            )}
 
             {loadingMenu ? (
               <div style={{ padding: '60px 20px', textAlign: 'center', color: '#64748b' }}>
@@ -859,11 +870,11 @@ export default function CustomerView({
                   }}
                 >
                   <span style={{ fontSize: '0.78rem', color: '#475569', wordBreak: 'break-all' }}>
-                    🔗 <strong>Lien de suivi :</strong> <code>{getTrackingUrl(trackedOrder.id)}</code>
+                    🔗 <strong>Lien de suivi :</strong> <code>{getTrackingUrl(trackedOrder)}</code>
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleCopyTrackingLink(trackedOrder.id)}
+                    onClick={() => handleCopyTrackingLink(trackedOrder)}
                     style={{
                       backgroundColor: copiedLink ? '#10b981' : '#ffffff',
                       color: copiedLink ? '#ffffff' : '#1e293b',

@@ -194,3 +194,62 @@ def test_customer_order_available_to_all_views(client):
         # Accessible in all orders query (for cashier and kitchen)
         all_orders = client.get("/api/orders").json()
         assert any(o["id"] == created["id"] for o in all_orders)
+
+# 11. Idempotency protection prevents duplicate orders on retry
+def test_idempotency_prevents_duplicate_orders(client):
+    idempotency_key = "test-idemp-unique-12345"
+    payload = {
+        "customer_name": "Lamine",
+        "items": [{"menu_item_id": "ITEM-B-101", "quantity": 1}],
+        "idempotency_key": idempotency_key,
+    }
+
+    # First attempt creates the order
+    res1 = client.post("/api/orders", json=payload)
+    assert res1.status_code == 201
+    order1 = res1.json()
+
+    # Second attempt with the exact same idempotency key returns the existing order
+    res2 = client.post("/api/orders", json=payload)
+    assert res2.status_code == 200 or res2.status_code == 201
+    order2 = res2.json()
+
+    assert order1["id"] == order2["id"]
+    assert order1["created_at"] == order2["created_at"]
+
+    # Verify orders table only has 1 record for this order
+    all_orders = client.get("/api/orders").json()
+    matching = [o for o in all_orders if o.get("idempotency_key") == idempotency_key]
+    assert len(matching) == 1
+
+# 12. Secure tracking token lookup for customer privacy
+def test_order_tracking_token_privacy(client):
+    res = client.post("/api/orders", json={
+        "customer_name": "Samy",
+        "items": [{"menu_item_id": "ITEM-B-201", "quantity": 1}],
+    })
+    assert res.status_code == 201
+    created = res.json()
+    assert created.get("tracking_token") is not None
+    token = created["tracking_token"]
+
+    # Lookup by secure tracking token
+    lookup_res = client.get(f"/api/orders/{token}")
+    assert lookup_res.status_code == 200
+    assert lookup_res.json()["id"] == created["id"]
+    assert lookup_res.json()["customer_name"] == "Samy"
+
+# 13. Customer can select optional dinner courses (not forced to order all 12 courses)
+def test_optional_dinner_courses_ordering(client):
+    # Customer orders only Soup (ITEM-D-301: 850 DA) and Dessert (ITEM-D-1001: 850 DA)
+    res = client.post("/api/orders", json={
+        "customer_name": "Sofiane",
+        "items": [
+            {"menu_item_id": "ITEM-D-301", "quantity": 1},
+            {"menu_item_id": "ITEM-D-1001", "quantity": 1},
+        ]
+    })
+    assert res.status_code == 201
+    order = res.json()
+    assert len(order["items"]) == 2
+    assert order["total_price"] == 1700.0

@@ -51,6 +51,7 @@ class OrderCreate(BaseModel):
     items: Union[List[CustomerOrderItemInput], List[str]] = Field(
         ..., min_length=1, description="List of menu item selections or legacy item names"
     )
+    idempotency_key: Optional[str] = Field(None, max_length=128, description="Optional unique key to prevent duplicate orders")
 
     @field_validator("customer_name")
     def validate_name(cls, v: str) -> str:
@@ -71,6 +72,8 @@ class OrderResponse(BaseModel):
     status: OrderStatus
     created_at: str
     version: int
+    tracking_token: Optional[str] = None
+    idempotency_key: Optional[str] = None
 
 class OrderConflictResponse(BaseModel):
     detail: str

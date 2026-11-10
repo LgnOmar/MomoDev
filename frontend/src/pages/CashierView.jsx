@@ -82,13 +82,17 @@ export default function CashierView({ orders, menu = [], onOrderCreated, onMenuI
     }
   };
 
-  const getTrackingUrl = (orderId) => {
+  const getTrackingUrl = (order) => {
     const origin = window.location.origin;
-    return `${origin}/?role=customer&orderId=${encodeURIComponent(orderId)}`;
+    const identifier = typeof order === 'object' && order !== null
+      ? (order.tracking_token || order.id)
+      : order;
+    return `${origin}/?role=customer&orderId=${encodeURIComponent(identifier)}`;
   };
 
-  const handleCopyLink = (orderId) => {
-    const url = getTrackingUrl(orderId);
+  const handleCopyLink = (order) => {
+    const orderId = typeof order === 'object' && order !== null ? order.id : order;
+    const url = getTrackingUrl(order);
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(orderId);
       setTimeout(() => setCopiedId(null), 2500);
@@ -402,7 +406,7 @@ export default function CashierView({ orders, menu = [], onOrderCreated, onMenuI
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {orders.map((ord) => {
-                  const trackingUrl = getTrackingUrl(ord.id);
+                  const trackingUrl = getTrackingUrl(ord);
                   const isCopied = copiedId === ord.id;
 
                   return (
@@ -457,7 +461,7 @@ export default function CashierView({ orders, menu = [], onOrderCreated, onMenuI
                         <div className="tracking-bar-actions">
                           <button
                             type="button"
-                            onClick={() => handleCopyLink(ord.id)}
+                            onClick={() => handleCopyLink(ord)}
                             style={{
                               backgroundColor: isCopied ? '#10b981' : '#ffffff',
                               color: isCopied ? '#ffffff' : '#334155',
